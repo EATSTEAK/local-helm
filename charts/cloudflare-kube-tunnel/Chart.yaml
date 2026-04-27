@@ -1,0 +1,31 @@
+apiVersion: v2
+name: cloudflare-kube-tunnel
+description: Expose a local Kubernetes ingress controller through Cloudflare Tunnel and ExternalDNS.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/koohyomin/local-helm
+sources:
+  - https://github.com/cloudflare/helm-charts
+  - https://github.com/kubernetes/ingress-nginx
+  - https://github.com/kubernetes-sigs/external-dns
+keywords:
+  - cloudflare
+  - tunnel
+  - colima
+  - kubernetes
+  - ingress
+  - external-dns
+dependencies:
+  - name: ingress-nginx
+    version: 4.15.1
+    repository: https://kubernetes.github.io/ingress-nginx
+    condition: ingress-nginx.enabled
+  - name: cloudflare-tunnel
+    version: 0.3.2
+    repository: https://cloudflare.github.io/helm-charts
+    condition: cloudflare-tunnel.enabled
+  - name: external-dns
+    version: 1.20.0
+    repository: https://kubernetes-sigs.github.io/external-dns/
+    condition: external-dns.enabled

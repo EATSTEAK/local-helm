@@ -1,0 +1,12 @@
+.DS_Store
+*.swp
+*.tmp
+*.log
+
+# Never commit rendered secrets or local env files.
+.env
+*.secret.yaml
+secrets/
+
+# Helm dependency archives are regenerated from Chart.lock.
+charts/*/charts/*.tgz

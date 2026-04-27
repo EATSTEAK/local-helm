@@ -1,0 +1,11 @@
+cloudflare-kube-tunnel has been installed.
+
+Expected Secrets:
+- {{ .Values.cloudflareTunnelCredentials.namespace }}/{{ .Values.cloudflareTunnelCredentials.name }} with key credentials.json
+- {{ .Values.externalDnsToken.namespace }}/{{ .Values.externalDnsToken.name }} with key api-token
+
+Verify:
+kubectl -n cloudflare-tunnel get pods
+kubectl -n external-dns logs deploy/external-dns --tail=50
+kubectl get ingress -A
+curl -i https://{{ .Values.sample.hostname }}/

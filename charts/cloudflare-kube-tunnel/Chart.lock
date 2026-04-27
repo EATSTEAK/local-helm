@@ -1,0 +1,12 @@
+dependencies:
+- name: ingress-nginx
+  repository: https://kubernetes.github.io/ingress-nginx
+  version: 4.15.1
+- name: cloudflare-tunnel
+  repository: https://cloudflare.github.io/helm-charts
+  version: 0.3.2
+- name: external-dns
+  repository: https://kubernetes-sigs.github.io/external-dns/
+  version: 1.20.0
+digest: sha256:64ca162da5fe1997eca588b0a26223ac72dc27a51e47348fd4e8bb008e6efe7b
+generated: "2026-04-28T03:31:35.781612+09:00"

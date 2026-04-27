@@ -6,10 +6,10 @@ This repository currently publishes `cloudflare-kube-tunnel`, an umbrella chart 
 
 ## Repository Usage
 
-After this repo is published with GitHub Pages enabled from the default branch root, add it as a Helm repository:
+Add the local directory as a Helm repository:
 
 ```sh
-helm repo add local-helm https://eatsteak.github.io/local-helm
+helm repo add local-helm file:///Users/koohyomin/Projects/local-helm
 helm repo update
 helm search repo local-helm
 ```

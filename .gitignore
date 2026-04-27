@@ -5,7 +5,12 @@
 
 # Never commit rendered secrets or local env files.
 .env
+*.env
 *.secret.yaml
+*.local.yaml
+values.local.yaml
+credentials.json
+*.credentials.json
 secrets/
 
 # Helm dependency archives are regenerated from Chart.lock.

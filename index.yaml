@@ -3,7 +3,7 @@ entries:
   cloudflare-kube-tunnel:
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2026-04-28T03:32:30.044024+09:00"
+    created: "2026-04-28T03:41:58.254639+09:00"
     dependencies:
     - condition: ingress-nginx.enabled
       name: ingress-nginx
@@ -35,6 +35,6 @@ entries:
     - https://github.com/kubernetes-sigs/external-dns
     type: application
     urls:
-    - https://eatsteak.github.io/local-helm/packages/cloudflare-kube-tunnel-0.1.0.tgz
+    - file:///Users/koohyomin/Projects/local-helm/packages/cloudflare-kube-tunnel-0.1.0.tgz
     version: 0.1.0
-generated: "2026-04-28T03:32:30.040645+09:00"
+generated: "2026-04-28T03:41:58.251265+09:00"

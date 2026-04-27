@@ -8,4 +8,4 @@ PACKAGE_DIR="${ROOT_DIR}/packages"
 helm dependency update "${CHART_DIR}"
 helm lint "${CHART_DIR}"
 helm package "${CHART_DIR}" --destination "${PACKAGE_DIR}"
-helm repo index "${ROOT_DIR}" --url https://koohyomin.github.io/local-helm
+helm repo index "${ROOT_DIR}" --url https://eatsteak.github.io/local-helm

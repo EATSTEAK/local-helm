@@ -4,7 +4,7 @@ description: Expose a local Kubernetes ingress controller through Cloudflare Tun
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
-home: https://github.com/koohyomin/local-helm
+home: https://github.com/EATSTEAK/local-helm
 sources:
   - https://github.com/cloudflare/helm-charts
   - https://github.com/kubernetes/ingress-nginx

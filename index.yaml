@@ -3,7 +3,7 @@ entries:
   cloudflare-kube-tunnel:
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2026-04-28T03:31:37.33133+09:00"
+    created: "2026-04-28T03:32:30.044024+09:00"
     dependencies:
     - condition: ingress-nginx.enabled
       name: ingress-nginx
@@ -19,8 +19,8 @@ entries:
       version: 1.20.0
     description: Expose a local Kubernetes ingress controller through Cloudflare Tunnel
       and ExternalDNS.
-    digest: abb1c5bcba768d3a4dcc0335051ab68717c54808d09023667888cafc6346a0a4
-    home: https://github.com/koohyomin/local-helm
+    digest: dad4ce36a7a9952de069ecbf2bac89030445c187cfbf014f95b378049bda7b66
+    home: https://github.com/EATSTEAK/local-helm
     keywords:
     - cloudflare
     - tunnel
@@ -35,6 +35,6 @@ entries:
     - https://github.com/kubernetes-sigs/external-dns
     type: application
     urls:
-    - https://koohyomin.github.io/local-helm/packages/cloudflare-kube-tunnel-0.1.0.tgz
+    - https://eatsteak.github.io/local-helm/packages/cloudflare-kube-tunnel-0.1.0.tgz
     version: 0.1.0
-generated: "2026-04-28T03:31:37.327345+09:00"
+generated: "2026-04-28T03:32:30.040645+09:00"

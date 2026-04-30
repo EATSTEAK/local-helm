@@ -31,6 +31,30 @@ helm upgrade --install cloudflare-kube-tunnel local-helm/cloudflare-kube-tunnel 
   --namespace default
 ```
 
+## Local Cluster Management
+
+This repository includes a Colima profile config in `config/colima/default.yaml`.
+The local cluster is configured for Kubernetes with `6GiB` memory.
+
+If you have `just` installed, common workflows are available through `justfile`:
+
+```sh
+just colima-start
+just colima-restart
+just colima-status
+just colima-apply-config
+just cluster-install
+just cluster-uninstall
+```
+
+The same Colima settings can also be applied directly:
+
+```sh
+colima start --profile default --cpus 2 --memory 6 --disk 100 \
+  --runtime docker --kubernetes --kubernetes-version v1.33.4+k3s1 \
+  --k3s-arg='--disable=traefik'
+```
+
 For local development before GitHub Pages is enabled:
 
 ```sh

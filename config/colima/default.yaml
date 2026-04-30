@@ -1,0 +1,42 @@
+# Colima profile for the local Kubernetes cluster.
+# Copy to ~/.colima/default/colima.yaml or run `just colima-restart`.
+cpu: 2
+disk: 100
+memory: 6
+arch: aarch64
+runtime: docker
+hostname: colima
+
+kubernetes:
+  enabled: true
+  version: v1.33.4+k3s1
+  k3sArgs:
+    - --disable=traefik
+  port: 0
+
+autoActivate: true
+
+network:
+  address: false
+  mode: shared
+  interface: en0
+  preferredRoute: false
+  dns: []
+  dnsHosts: {}
+  hostAddresses: false
+
+docker: {}
+vmType: vz
+portForwarder: ssh
+rosetta: false
+binfmt: true
+nestedVirtualization: false
+mountType: virtiofs
+mountInotify: true
+forwardAgent: false
+sshConfig: true
+sshPort: 0
+mounts: []
+diskImage: ""
+rootDisk: 20
+env: {}

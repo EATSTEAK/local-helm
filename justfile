@@ -41,3 +41,27 @@ cluster-uninstall:
 
 package:
     ./scripts/package.sh
+
+flux-status:
+    flux get sources git -A
+    flux get sources helm -A
+    flux get kustomizations -A
+    flux get helmreleases -A
+
+flux-reconcile:
+    flux reconcile source git flux-system -n flux-system
+    flux reconcile kustomization infrastructure -n flux-system
+    flux reconcile kustomization apps -n flux-system
+
+cluster-inventory:
+    kubectl get pods -A
+    kubectl get ingress -A
+    kubectl get pvc -A
+    helm list -A
+
+apps-status:
+    kubectl rollout status deploy/whoami -n default
+    kubectl rollout status deploy/canvas -n default
+    kubectl rollout status deploy/triflam-bot -n triflam-bot
+    kubectl get deploy,svc,ingress,pvc -n default
+    kubectl get deploy,svc,cm,pvc -n triflam-bot

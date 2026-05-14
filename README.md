@@ -1,8 +1,8 @@
 # local-helm
 
-Public Helm chart repository for local Kubernetes utilities.
+Public Helm chart and Flux GitOps repository for local Kubernetes utilities.
 
-This repository currently publishes `cloudflare-kube-tunnel`, an umbrella chart that exposes a local Colima Kubernetes cluster through Cloudflare Tunnel.
+This repository publishes `cloudflare-kube-tunnel`, an umbrella chart that exposes a local Colima Kubernetes cluster through Cloudflare Tunnel. It also contains Flux-managed manifests for the local Colima cluster.
 
 ## Repository Usage
 
@@ -62,6 +62,56 @@ helm dependency update charts/cloudflare-kube-tunnel
 helm upgrade --install cloudflare-kube-tunnel ./charts/cloudflare-kube-tunnel
 ```
 
+## GitOps Operations
+
+Flux syncs the Colima cluster from `clusters/colima` on the `main` branch:
+
+```text
+clusters/colima/           # Flux root for the local cluster
+infrastructure/colima/     # HelmRepository and HelmRelease resources
+apps/colima/               # Application manifests
+```
+
+Check Flux status:
+
+```sh
+just flux-status
+```
+
+Force Flux to fetch the latest Git revision and reconcile both layers:
+
+```sh
+just flux-reconcile
+```
+
+Inspect the current cluster inventory:
+
+```sh
+just cluster-inventory
+```
+
+Check application rollouts:
+
+```sh
+just apps-status
+```
+
+Flux `Kustomization` resources currently use `prune: false` while the cluster is being migrated. Enable pruning only after each managed layer is verified to contain every resource that should remain in the cluster.
+
+If a layer needs to be paused during troubleshooting:
+
+```sh
+flux suspend kustomization apps -n flux-system
+flux resume kustomization apps -n flux-system
+```
+
+For Helm-managed infrastructure:
+
+```sh
+flux suspend helmrelease ingress-nginx -n ingress-nginx
+flux resume helmrelease ingress-nginx -n ingress-nginx
+```
+
 ## Published Packages
 
 - `packages/cloudflare-kube-tunnel-0.1.0.tgz`
@@ -75,11 +125,24 @@ Regenerate packages and index:
 
 ## Secret Handling
 
-No Cloudflare API tokens or tunnel credential JSON files are committed.
+No Cloudflare API tokens, tunnel credential JSON files, Slack tokens, or app credentials are committed.
 
-The chart expects these Kubernetes Secrets to exist by default:
+These Kubernetes Secrets are maintained manually and referenced by GitOps manifests only by name:
 
 - `cloudflare-tunnel/cloudflare-tunnel-credentials`, key `credentials.json`
 - `external-dns/cloudflare-api-token`, key `api-token`
+- `triflam-bot/triflam-bot-secrets`
 
-Alternatively, set the chart values that create those secrets at install time, but do not commit those values.
+Create or refresh the Cloudflare Secrets manually:
+
+```sh
+kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-credentials \
+  --from-file=credentials.json="$HOME/.cloudflared/9b1820c5-3168-4638-a1f0-9fe1585eda94.json" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl -n external-dns create secret generic cloudflare-api-token \
+  --from-literal=api-token='<cloudflare-api-token>' \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Do not enable chart values that create Secrets with inline credentials unless those values remain outside Git.

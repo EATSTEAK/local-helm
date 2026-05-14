@@ -8,7 +8,7 @@ spec:
     - name: infrastructure
   interval: 10m0s
   path: ./apps/colima
-  prune: false
+  prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system

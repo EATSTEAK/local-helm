@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: triflam-bot-config
+  namespace: triflam-bot
+data:
+  CANVAS_PUBLISH_URL: http://canvas.default.svc.cluster.local/api/v1/publish
+  LOG_LEVEL: info
+  MCP_LINEAR_ENABLED: "true"
+  MCP_LINEAR_URL: https://mcp.linear.app/mcp
+  MCP_MEMKRAFT_ENABLED: "true"
+  MCP_SLACK_ENABLED: "true"
+  MEMKRAFT_DIR: /workspace/memory
+  MEMKRAFT_PYTHON: /opt/memkraft/bin/python
+  NOTION_CALENDAR_SYNC_DEFAULT_TIMEZONE: Asia/Seoul
+  NOTION_CALENDAR_SYNC_MIN_INTERVAL_MINUTES: "5"
+  NOTION_CALENDAR_SYNC_STORE_PATH: /home/node/.local/share/triflam-bot/notion-calendar-sync.json
+  OPENCODE_BUNDLED_CONFIG_DIR: /app/.opencode
+  OPENCODE_MODEL: triflam-local/gpt-5.5
+  OPENCODE_PROVIDER_BASE_URL: http://host.docker.internal:8317/v1
+  OPENCODE_SERVER_PORT: "4097"
+  OPENCODE_WORKDIR: /workspace
+  PORT: "3000"
+  SCHEDULE_STORE_PATH: /home/node/.local/share/triflam-bot/schedules.json
+  SLACK_BLOCKS_DIR: /home/node/.local/share/triflam-bot/slack-blocks
+  SLACK_MCP_ADD_MESSAGE_TOOL: ""
+  SLACK_MCP_ENABLED_TOOLS: conversations_history,conversations_replies,channels_list,users_search
+  SLACK_MCP_MARK_TOOL: ""
+  THREAD_SESSION_STORE_PATH: /home/node/.local/share/triflam-bot/thread-sessions.json

@@ -62,6 +62,6 @@ cluster-inventory:
 apps-status:
     kubectl rollout status deploy/whoami -n default
     kubectl rollout status deploy/canvas -n default
-    kubectl rollout status deploy/triflam-bot -n triflam-bot
+    kubectl rollout status deploy/flamres -n flamres
     kubectl get deploy,svc,ingress,pvc -n default
-    kubectl get deploy,svc,cm,pvc -n triflam-bot
+    kubectl get deploy,svc,cm,pvc -n flamres

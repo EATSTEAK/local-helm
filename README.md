@@ -131,7 +131,7 @@ These Kubernetes Secrets are maintained manually and referenced by GitOps manife
 
 - `cloudflare-tunnel/cloudflare-tunnel-credentials`, key `credentials.json`
 - `external-dns/cloudflare-api-token`, key `api-token`
-- `triflam-bot/triflam-bot-secrets`
+- `flamres/flamres-secrets`
 
 Create or refresh the Cloudflare Secrets manually:
 

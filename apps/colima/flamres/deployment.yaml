@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: triflam-bot
-  namespace: triflam-bot
+  name: flamres
+  namespace: flamres
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: triflam-bot
+      app: flamres
   template:
     metadata:
       labels:
-        app: triflam-bot
+        app: flamres
     spec:
       securityContext:
         fsGroup: 1000
@@ -19,13 +19,13 @@ spec:
         runAsUser: 1000
       containers:
         - name: bot
-          image: triflam-bot:local
+          image: flamres:local
           imagePullPolicy: Never
           envFrom:
             - configMapRef:
-                name: triflam-bot-config
+                name: flamres-config
             - secretRef:
-                name: triflam-bot-secrets
+                name: flamres-secrets
           ports:
             - name: http
               containerPort: 3000
@@ -45,7 +45,7 @@ spec:
       volumes:
         - name: opencode-data
           persistentVolumeClaim:
-            claimName: triflam-bot-opencode-data
+            claimName: flamres-opencode-data
         - name: opencode-workdir
           persistentVolumeClaim:
-            claimName: triflam-bot-workdir
+            claimName: flamres-workdir

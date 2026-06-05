@@ -7,3 +7,10 @@ image:
 
 imagePullSecrets:
   - name: ghcr-auth
+
+config:
+  LLM_BASE_URL: http://host.docker.internal:8317/v1
+  LLM_MODEL: triflam-local/gpt-5.5
+  EMBEDDING_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai
+  EMBEDDING_MODEL: gemini-embedding-2
+  EMBEDDING_DIMENSIONS: "1536"

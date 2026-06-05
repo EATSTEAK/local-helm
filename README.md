@@ -165,12 +165,12 @@ kubectl -n sake create secret docker-registry ghcr-auth \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-Create or refresh optional Sake runtime credentials before running jobs that call external LLM or embedding providers:
+Create or refresh optional Sake runtime credentials before running jobs that call external LLM or embedding providers. The Colima Sake overlay currently uses the local OpenAI-compatible chat completions endpoint on `host.docker.internal:8317` and Gemini for embeddings:
 
 ```sh
 kubectl -n sake create secret generic sake-runtime-secrets \
-  --from-literal=LLM_API_KEY='<llm-api-key>' \
-  --from-literal=EMBEDDING_API_KEY='<embedding-api-key>' \
+  --from-literal=LLM_API_KEY='<local-llm-api-key-or-placeholder>' \
+  --from-literal=EMBEDDING_API_KEY='<gemini-api-key>' \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 

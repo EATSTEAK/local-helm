@@ -13,6 +13,8 @@ spec:
       labels:
         app: flamres
     spec:
+      imagePullSecrets:
+        - name: ghcr-auth
       securityContext:
         fsGroup: 1000
         runAsGroup: 1000

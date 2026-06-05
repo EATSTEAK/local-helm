@@ -131,6 +131,8 @@ These Kubernetes Secrets are maintained manually and referenced by GitOps manife
 
 - `cloudflare-tunnel/cloudflare-tunnel-credentials`, key `credentials.json`
 - `external-dns/cloudflare-api-token`, key `api-token`
+- `default/ghcr-auth`, Docker registry credentials for `ghcr.io`
+- `flamres/ghcr-auth`, Docker registry credentials for `ghcr.io`
 - `flamres/flamres-secrets`
 
 Create or refresh the Cloudflare Secrets manually:
@@ -142,6 +144,22 @@ kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-credentials
 
 kubectl -n external-dns create secret generic cloudflare-api-token \
   --from-literal=api-token='<cloudflare-api-token>' \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Create or refresh the GHCR pull Secrets in every namespace that references them:
+
+```sh
+kubectl -n default create secret docker-registry ghcr-auth \
+  --docker-server=ghcr.io \
+  --docker-username='<github-username>' \
+  --docker-password='<github-token>' \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl -n flamres create secret docker-registry ghcr-auth \
+  --docker-server=ghcr.io \
+  --docker-username='<github-username>' \
+  --docker-password='<github-token>' \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 

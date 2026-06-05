@@ -1,0 +1,17 @@
+{{- $cloudflareTunnel := index .Values "cloudflare-tunnel" | default dict -}}
+{{- if (get $cloudflareTunnel "enabled") -}}
+{{- $cloudflare := get $cloudflareTunnel "cloudflare" | default dict -}}
+{{- if not (get $cloudflare "secretName") -}}
+{{- fail "cloudflare-tunnel.cloudflare.secretName is required when cloudflare-tunnel.enabled=true" -}}
+{{- end -}}
+{{- if not (get $cloudflare "tunnelName") -}}
+{{- fail "cloudflare-tunnel.cloudflare.tunnelName is required when cloudflare-tunnel.enabled=true" -}}
+{{- end -}}
+{{- if not (get $cloudflare "tunnelId") -}}
+{{- fail "cloudflare-tunnel.cloudflare.tunnelId is required when cloudflare-tunnel.enabled=true" -}}
+{{- end -}}
+{{- $ingress := get $cloudflare "ingress" | default list -}}
+{{- if or (not (kindIs "slice" $ingress)) (eq (len $ingress) 0) -}}
+{{- fail "cloudflare-tunnel.cloudflare.ingress must be a non-empty list when cloudflare-tunnel.enabled=true" -}}
+{{- end -}}
+{{- end -}}

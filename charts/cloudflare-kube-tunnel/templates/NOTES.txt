@@ -1,11 +1,29 @@
-cloudflare-kube-tunnel has been installed.
+{{- $cloudflareTunnel := index .Values "cloudflare-tunnel" | default dict -}}
+{{- if not (get $cloudflareTunnel "enabled") }}
+cloudflare-kube-tunnel installed with cloudflare-tunnel.enabled=false.
 
-Expected Secrets:
-- {{ .Values.cloudflareTunnelCredentials.namespace }}/{{ .Values.cloudflareTunnelCredentials.name }} with key credentials.json
-- {{ .Values.externalDnsToken.namespace }}/{{ .Values.externalDnsToken.name }} with key api-token
+Enable the upstream cloudflare-tunnel dependency and provide an existing Secret before installing a working tunnel:
 
-Verify:
-kubectl -n cloudflare-tunnel get pods
-kubectl -n external-dns logs deploy/external-dns --tail=50
-kubectl get ingress -A
-curl -i https://{{ .Values.sample.hostname }}/
+cloudflare-tunnel:
+  enabled: true
+  cloudflare:
+    secretName: cloudflare-tunnel-credentials
+    tunnelName: <tunnel-name>
+    tunnelId: <tunnel-id>
+    ingress:
+      - hostname: "*.example.com"
+        service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
+{{- else }}
+cloudflare-kube-tunnel has installed the upstream cloudflare-tunnel chart.
+
+Expected existing Secret:
+- {{ .Release.Namespace }}/{{ (get (get $cloudflareTunnel "cloudflare" | default dict) "secretName") }} with key credentials.json
+
+Useful checks:
+kubectl -n {{ .Release.Namespace }} get pods
+kubectl -n {{ .Release.Namespace }} get secret {{ (get (get $cloudflareTunnel "cloudflare" | default dict) "secretName") }}
+
+Application Ingresses should publish CNAME records through ExternalDNS with annotations like:
+external-dns.kubernetes.io/target: {{ (get (get $cloudflareTunnel "cloudflare" | default dict) "tunnelId") }}.cfargotunnel.com
+external-dns.kubernetes.io/cloudflare-proxied: "true"
+{{- end }}

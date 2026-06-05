@@ -1,34 +1,54 @@
 # local-helm
 
-Public Helm chart and Flux GitOps repository for local Kubernetes utilities.
+Source-based Helm chart and Flux GitOps repository for local Kubernetes utilities.
 
-This repository publishes `cloudflare-kube-tunnel`, an umbrella chart that exposes a local Colima Kubernetes cluster through Cloudflare Tunnel. It also contains Flux-managed manifests for the local Colima cluster.
+This repository contains `cloudflare-kube-tunnel`, a small Helm wrapper that installs Cloudflare Tunnel for an existing Kubernetes ingress controller. It also contains Flux-managed manifests for the local Colima cluster.
 
-## Repository Usage
+## Chart Usage
 
-Add the local directory as a Helm repository:
+`cloudflare-kube-tunnel` does not install `ingress-nginx` or `external-dns` by default. Use it in clusters where an ingress controller already exists and where ExternalDNS is already responsible for publishing DNS records from application Ingress annotations.
 
-```sh
-helm repo add local-helm file:///Users/koohyomin/Projects/local-helm
-helm repo update
-helm search repo local-helm
-```
-
-Install the chart:
+Create the Cloudflare Tunnel credentials Secret in the release namespace before installing the chart:
 
 ```sh
 kubectl create namespace cloudflare-tunnel --dry-run=client -o yaml | kubectl apply -f -
+
 kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-credentials \
   --from-file=credentials.json="$HOME/.cloudflared/9b1820c5-3168-4638-a1f0-9fe1585eda94.json" \
   --dry-run=client -o yaml | kubectl apply -f -
+```
 
-kubectl create namespace external-dns --dry-run=client -o yaml | kubectl apply -f -
-kubectl -n external-dns create secret generic cloudflare-api-token \
-  --from-literal=api-token='<cloudflare-api-token>' \
-  --dry-run=client -o yaml | kubectl apply -f -
+Install from source:
 
-helm upgrade --install cloudflare-kube-tunnel local-helm/cloudflare-kube-tunnel \
-  --namespace default
+```sh
+helm dependency update ./charts/cloudflare-kube-tunnel
+helm upgrade --install cloudflare-tunnel ./charts/cloudflare-kube-tunnel \
+  --namespace cloudflare-tunnel \
+  --create-namespace \
+  -f ./charts/cloudflare-kube-tunnel/examples/values-colima.yaml
+```
+
+The chart passes values through to the upstream `cloudflare-tunnel` chart. A minimal values file looks like this:
+
+```yaml
+cloudflare-tunnel:
+  enabled: true
+  cloudflare:
+    secretName: cloudflare-tunnel-credentials
+    tunnelName: colima-k8s-koohyomin
+    tunnelId: 9b1820c5-3168-4638-a1f0-9fe1585eda94
+    ingress:
+      - hostname: "*.koohyom.in"
+        service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
+```
+
+Application Ingresses publish Cloudflare Tunnel CNAME records through ExternalDNS annotations:
+
+```yaml
+metadata:
+  annotations:
+    external-dns.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
 ```
 
 ## Local Cluster Management
@@ -55,11 +75,10 @@ colima start --profile default --cpus 2 --memory 6 --disk 100 \
   --k3s-arg='--disable=traefik'
 ```
 
-For local development before GitHub Pages is enabled:
+For local chart validation:
 
 ```sh
-helm dependency update charts/cloudflare-kube-tunnel
-helm upgrade --install cloudflare-kube-tunnel ./charts/cloudflare-kube-tunnel
+just helm-lint
 ```
 
 ## GitOps Operations
@@ -71,6 +90,8 @@ clusters/colima/           # Flux root for the local cluster
 infrastructure/colima/     # HelmRepository and HelmRelease resources
 apps/colima/               # Application manifests
 ```
+
+The GitOps infrastructure layer installs `ingress-nginx` and `external-dns` as separate Helm releases. The `cloudflare-tunnel` Helm release uses the local chart at `./charts/cloudflare-kube-tunnel` from the Flux GitRepository source and reconciles on Git revisions.
 
 Check Flux status:
 
@@ -96,7 +117,7 @@ Check application rollouts:
 just apps-status
 ```
 
-Flux `Kustomization` resources currently use `prune: false` while the cluster is being migrated. Enable pruning only after each managed layer is verified to contain every resource that should remain in the cluster.
+Flux `Kustomization` resources use pruning, so verify each managed layer contains every resource that should remain in the cluster before removing manifests.
 
 If a layer needs to be paused during troubleshooting:
 
@@ -112,22 +133,11 @@ flux suspend helmrelease ingress-nginx -n ingress-nginx
 flux resume helmrelease ingress-nginx -n ingress-nginx
 ```
 
-## Published Packages
-
-- `packages/cloudflare-kube-tunnel-0.1.0.tgz`
-- `index.yaml`
-
-Regenerate packages and index:
-
-```sh
-./scripts/package.sh
-```
-
 ## Secret Handling
 
 No Cloudflare API tokens, tunnel credential JSON files, Slack tokens, or app credentials are committed.
 
-These Kubernetes Secrets are maintained manually and referenced by GitOps manifests only by name:
+These Kubernetes Secrets are maintained outside the chart and referenced by GitOps manifests only by name:
 
 - `cloudflare-tunnel/cloudflare-tunnel-credentials`, key `credentials.json`
 - `external-dns/cloudflare-api-token`, key `api-token`
@@ -163,4 +173,4 @@ kubectl -n flamres create secret docker-registry ghcr-auth \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-Do not enable chart values that create Secrets with inline credentials unless those values remain outside Git.
+Do not commit rendered Secrets, Cloudflare API tokens, tunnel credential JSON files, or registry credentials.

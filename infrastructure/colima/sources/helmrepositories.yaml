@@ -10,15 +10,6 @@ spec:
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
-  name: cloudflare
-  namespace: flux-system
-spec:
-  interval: 10m0s
-  url: https://cloudflare.github.io/helm-charts
----
-apiVersion: source.toolkit.fluxcd.io/v1
-kind: HelmRepository
-metadata:
   name: external-dns
   namespace: flux-system
 spec:

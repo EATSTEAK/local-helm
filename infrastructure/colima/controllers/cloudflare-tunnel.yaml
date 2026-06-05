@@ -9,23 +9,24 @@ spec:
   targetNamespace: cloudflare-tunnel
   chart:
     spec:
-      chart: cloudflare-tunnel
+      chart: ./charts/cloudflare-kube-tunnel
       interval: 10m0s
-      reconcileStrategy: ChartVersion
+      reconcileStrategy: Revision
       sourceRef:
-        kind: HelmRepository
-        name: cloudflare
+        kind: GitRepository
+        name: flux-system
         namespace: flux-system
-      version: 0.3.2
   values:
-    cloudflare:
-      enableWarp: false
-      ingress:
-        - hostname: "*.koohyom.in"
-          service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
-      secretName: cloudflare-tunnel-credentials
-      tunnelId: 9b1820c5-3168-4638-a1f0-9fe1585eda94
-      tunnelName: colima-k8s-koohyomin
-    image:
-      tag: 2026.2.0
-    replicaCount: 2
+    cloudflare-tunnel:
+      enabled: true
+      cloudflare:
+        enableWarp: false
+        ingress:
+          - hostname: "*.koohyom.in"
+            service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
+        secretName: cloudflare-tunnel-credentials
+        tunnelId: 9b1820c5-3168-4638-a1f0-9fe1585eda94
+        tunnelName: colima-k8s-koohyomin
+      image:
+        tag: 2026.2.0
+      replicaCount: 2

@@ -1,0 +1,296 @@
+name: Update image tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Application name for the commit message and target scope, e.g. sake or flamres"
+        required: true
+        type: string
+      tag:
+        description: "New image tag, e.g. main-abcdef1"
+        required: true
+        type: string
+      targets:
+        description: 'JSON array of {file,path}, e.g. [{"file":"apps/colima/sake/api-values.yaml","path":"image.tag"}]'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-image-tag-${{ github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  YQ_VERSION: v4.44.3
+
+jobs:
+  validate:
+    name: Validate inputs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      app: ${{ steps.validate.outputs.app }}
+      tag: ${{ steps.validate.outputs.tag }}
+      targets: ${{ steps.validate.outputs.targets }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.3
+
+      - name: Validate dispatch inputs
+        id: validate
+        env:
+          APP: ${{ inputs.app }}
+          TAG: ${{ inputs.tag }}
+          TARGETS_JSON: ${{ inputs.targets }}
+        run: |
+          set -euo pipefail
+
+          fail() {
+            echo "::error::$1"
+            exit 1
+          }
+
+          if [[ ! "$APP" =~ ^[a-z0-9][a-z0-9._-]{0,63}$ ]]; then
+            fail "Invalid app: $APP"
+          fi
+
+          if [[ ! "$TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]]; then
+            fail "Invalid tag: $TAG"
+          fi
+
+          if ! jq -e 'type == "array" and length > 0 and all(.[]; type == "object" and (.file | type == "string") and (.path | type == "string"))' <<< "$TARGETS_JSON" > /dev/null; then
+            fail 'targets must be a non-empty JSON array of {file,path} objects'
+          fi
+
+          seen_targets="$(mktemp)"
+          while IFS= read -r target; do
+            file="$(jq -r '.file' <<< "$target")"
+            path="$(jq -r '.path' <<< "$target")"
+            key="$file $path"
+
+            if grep -Fxq "$key" "$seen_targets"; then
+              fail "Duplicate target: $file $path"
+            fi
+            printf '%s\n' "$key" >> "$seen_targets"
+
+            if [[ "$file" == /* || "$file" == *'..'* || "$file" == *'\\'* ]]; then
+              fail "Forbidden file path: $file"
+            fi
+
+            if [[ ! "$file" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+              fail "File path contains unsupported characters: $file"
+            fi
+
+            expected_prefix="apps/colima/${APP}/"
+            if [[ "$file" != "$expected_prefix"* ]]; then
+              fail "Target file must be under $expected_prefix: $file"
+            fi
+
+            basename="${file##*/}"
+            if [[ "$basename" != "values.yaml" && "$basename" != *"-values.yaml" ]]; then
+              fail "Target file must be values.yaml or *-values.yaml: $file"
+            fi
+
+            if [[ ! -f "$file" ]]; then
+              fail "Target file does not exist: $file"
+            fi
+
+            if [[ ! "$path" =~ ^[A-Za-z_][A-Za-z0-9_-]*(\.[A-Za-z_][A-Za-z0-9_-]*)*$ ]]; then
+              fail "Invalid YAML path: $path"
+            fi
+
+            if [[ "${path##*.}" != "tag" ]]; then
+              fail "YAML path must end with tag: $path"
+            fi
+          done < <(jq -c '.[]' <<< "$TARGETS_JSON")
+
+          echo "app=$APP" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "targets=$(jq -c '.' <<< "$TARGETS_JSON")" >> "$GITHUB_OUTPUT"
+
+  update:
+    name: Update values and commit
+    runs-on: ubuntu-latest
+    needs: validate
+    environment:
+      name: image-tag-update
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.3
+        with:
+          fetch-depth: 0
+
+      - name: Install yq
+        env:
+          YQ_VERSION: ${{ env.YQ_VERSION }}
+        run: |
+          set -euo pipefail
+
+          yq_url="https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          curl --fail --location --silent --show-error "$yq_url" --output "$RUNNER_TEMP/yq"
+          sudo install -m 0755 "$RUNNER_TEMP/yq" /usr/local/bin/yq
+          yq --version
+
+      - name: Apply tag updates
+        id: apply
+        env:
+          APP: ${{ needs.validate.outputs.app }}
+          TAG: ${{ needs.validate.outputs.tag }}
+          TARGETS_JSON: ${{ needs.validate.outputs.targets }}
+        run: |
+          set -euo pipefail
+
+          fail() {
+            echo "::error::$1"
+            exit 1
+          }
+
+          changed_files="$RUNNER_TEMP/changed-files.txt"
+          seen_targets="$(mktemp)"
+          : > "$changed_files"
+
+          while IFS= read -r target; do
+            file="$(jq -r '.file' <<< "$target")"
+            path="$(jq -r '.path' <<< "$target")"
+            key="$file $path"
+
+            if grep -Fxq "$key" "$seen_targets"; then
+              fail "Duplicate target: $file $path"
+            fi
+            printf '%s\n' "$key" >> "$seen_targets"
+
+            if [[ "$file" == /* || "$file" == *'..'* || "$file" == *'\\'* ]]; then
+              fail "Forbidden file path: $file"
+            fi
+
+            if [[ ! "$file" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+              fail "File path contains unsupported characters: $file"
+            fi
+
+            expected_prefix="apps/colima/${APP}/"
+            if [[ "$file" != "$expected_prefix"* ]]; then
+              fail "Target file must be under $expected_prefix: $file"
+            fi
+
+            basename="${file##*/}"
+            if [[ "$basename" != "values.yaml" && "$basename" != *"-values.yaml" ]]; then
+              fail "Target file must be values.yaml or *-values.yaml: $file"
+            fi
+
+            if [[ ! -f "$file" ]]; then
+              fail "Target file does not exist: $file"
+            fi
+
+            if [[ ! "$path" =~ ^[A-Za-z_][A-Za-z0-9_-]*(\.[A-Za-z_][A-Za-z0-9_-]*)*$ ]]; then
+              fail "Invalid YAML path: $path"
+            fi
+
+            if [[ "${path##*.}" != "tag" ]]; then
+              fail "YAML path must end with tag: $path"
+            fi
+
+            path_expr="$(jq -rn --arg path "$path" '$path | split(".") | map("[\"" + . + "\"]") | join("")')"
+            current="$(yq -r ".${path_expr}" "$file")"
+
+            if [[ "$current" == "null" ]]; then
+              fail "YAML path does not exist or is null: $file $path"
+            fi
+
+            if [[ "$current" == "$TAG" ]]; then
+              echo "::notice::$file $path is already $TAG"
+              continue
+            fi
+
+            TAG="$TAG" yq -i ".${path_expr} = strenv(TAG)" "$file"
+            yq '.' "$file" > /dev/null
+
+            updated="$(yq -r ".${path_expr}" "$file")"
+            if [[ "$updated" != "$TAG" ]]; then
+              fail "Verification failed for $file $path: expected $TAG, got $updated"
+            fi
+
+            printf '%s\n' "$file" >> "$changed_files"
+          done < <(jq -c '.[]' <<< "$TARGETS_JSON")
+
+          sort -u "$changed_files" -o "$changed_files"
+
+          if [[ ! -s "$changed_files" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No image tag changes to commit."
+            exit 0
+          fi
+
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          {
+            echo 'files<<EOF'
+            cat "$changed_files"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push changes
+        if: steps.apply.outputs.changed == 'true'
+        env:
+          APP: ${{ needs.validate.outputs.app }}
+          TAG: ${{ needs.validate.outputs.tag }}
+          CHANGED_FILES: ${{ steps.apply.outputs.files }}
+        run: |
+          set -euo pipefail
+
+          fail() {
+            echo "::error::$1"
+            exit 1
+          }
+
+          mapfile -t expected_files <<< "$CHANGED_FILES"
+          mapfile -t diff_files < <(git diff --name-only)
+
+          if [[ "${#diff_files[@]}" -ne "${#expected_files[@]}" ]]; then
+            printf 'Expected files:\n%s\n' "${expected_files[@]}"
+            printf 'Actual diff files:\n%s\n' "${diff_files[@]}"
+            fail "Unexpected number of changed files"
+          fi
+
+          for expected in "${expected_files[@]}"; do
+            found=false
+            for actual in "${diff_files[@]}"; do
+              if [[ "$actual" == "$expected" ]]; then
+                found=true
+                break
+              fi
+            done
+            if [[ "$found" != "true" ]]; then
+              fail "Expected changed file is missing from git diff: $expected"
+            fi
+          done
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          subject_tag="$TAG"
+          if [[ "$TAG" == main-* ]]; then
+            subject_tag="${TAG#main-}"
+          fi
+
+          commit_message="$RUNNER_TEMP/commit-message.txt"
+          {
+            echo "${APP}: ${subject_tag}"
+            echo
+            echo "Updated image tag to ${TAG}."
+            echo
+            echo "Files:"
+            for file in "${expected_files[@]}"; do
+              echo "- ${file}"
+            done
+            echo
+            echo "Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          } > "$commit_message"
+
+          git add -- "${expected_files[@]}"
+          git commit -F "$commit_message"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

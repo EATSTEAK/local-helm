@@ -174,12 +174,24 @@ kubectl -n sake create secret generic sake-runtime-secrets \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-Sake GHCR packages should remain private. After the `Release images` workflow pushes `ghcr.io/triflam/sake-api:main-<sha>` and `ghcr.io/triflam/sake-worker:main-<sha>`, update the pinned tags manually:
+Sake GHCR packages should remain private. After the `Release images` workflow pushes `ghcr.io/triflam/sake-api:main-<sha>` and `ghcr.io/triflam/sake-worker:main-<sha>`, update the pinned tags with the **Update image tag** GitHub Actions workflow.
 
-```sh
-$EDITOR apps/colima/sake/api-values.yaml
-$EDITOR apps/colima/sake/worker-values.yaml
-# Set both image.tag values to main-<sha>, then commit to local-helm main.
+Before using the workflow, create a GitHub Environment named `image-tag-update` and configure Required reviewers. The workflow targets this environment, so the commit job waits for deployment review before it updates files and pushes back to the selected ref.
+
+For Sake, run the workflow with:
+
+```text
+app: sake
+tag: main-<sha>
+targets: [{"file":"apps/colima/sake/api-values.yaml","path":"image.tag"},{"file":"apps/colima/sake/worker-values.yaml","path":"image.tag"}]
+```
+
+For Flamres, run the workflow with:
+
+```text
+app: flamres
+tag: main-<sha>
+targets: [{"file":"apps/colima/flamres/values.yaml","path":"image.tag"}]
 ```
 
 Do not commit rendered Secrets, Cloudflare API tokens, tunnel credential JSON files, registry credentials, or real external API keys.

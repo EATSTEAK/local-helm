@@ -56,7 +56,7 @@ metadata:
 This repository includes a Colima profile config in `config/colima/values.yaml`.
 The local cluster is configured for Kubernetes with `6GiB` memory.
 
-If you have `just` installed, common workflows are available through `justfile`:
+If you have `just` installed, only cluster and Flux setup workflows are kept in `justfile`:
 
 ```sh
 just colima-start
@@ -73,12 +73,6 @@ The same Colima settings can also be applied directly:
 colima start --profile default --cpus 2 --memory 6 --disk 100 \
   --runtime docker --kubernetes --kubernetes-version v1.33.4+k3s1 \
   --k3s-arg='--disable=traefik'
-```
-
-For local chart validation:
-
-```sh
-just helm-lint
 ```
 
 ## GitOps Operations
@@ -103,18 +97,6 @@ Force Flux to fetch the latest Git revision and reconcile both layers:
 
 ```sh
 just flux-reconcile
-```
-
-Inspect the current cluster inventory:
-
-```sh
-just cluster-inventory
-```
-
-Check application rollouts:
-
-```sh
-just apps-status
 ```
 
 Flux `Kustomization` resources use pruning, so verify each managed layer contains every resource that should remain in the cluster before removing manifests.
@@ -144,6 +126,10 @@ These Kubernetes Secrets are maintained outside the chart and referenced by GitO
 - `default/ghcr-auth`, Docker registry credentials for `ghcr.io`
 - `flamres/ghcr-auth`, Docker registry credentials for `ghcr.io`
 - `flamres/flamres-secrets`
+- `sake/ghcr-auth`, Docker registry credentials for `ghcr.io`
+- `sake/sake-runtime-secrets`, optional runtime credentials such as `LLM_API_KEY` and `EMBEDDING_API_KEY`
+
+The Sake chart creates `sake/sake-dev-secrets` with local-only Postgres, MinIO, and `API_KEY` defaults. Do not put real external API keys in that chart-managed Secret.
 
 Create or refresh the Cloudflare Secrets manually:
 
@@ -171,6 +157,29 @@ kubectl -n flamres create secret docker-registry ghcr-auth \
   --docker-username='<github-username>' \
   --docker-password='<github-token>' \
   --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl -n sake create secret docker-registry ghcr-auth \
+  --docker-server=ghcr.io \
+  --docker-username='<github-username>' \
+  --docker-password='<github-token-with-read-packages>' \
+  --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-Do not commit rendered Secrets, Cloudflare API tokens, tunnel credential JSON files, or registry credentials.
+Create or refresh optional Sake runtime credentials before running jobs that call external LLM or embedding providers:
+
+```sh
+kubectl -n sake create secret generic sake-runtime-secrets \
+  --from-literal=LLM_API_KEY='<llm-api-key>' \
+  --from-literal=EMBEDDING_API_KEY='<embedding-api-key>' \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Sake GHCR packages should remain private. After the `Release images` workflow pushes `ghcr.io/triflam/sake-api:main-<sha>` and `ghcr.io/triflam/sake-worker:main-<sha>`, update the pinned tags manually:
+
+```sh
+$EDITOR apps/colima/sake/api-values.yaml
+$EDITOR apps/colima/sake/worker-values.yaml
+# Set both image.tag values to main-<sha>, then commit to local-helm main.
+```
+
+Do not commit rendered Secrets, Cloudflare API tokens, tunnel credential JSON files, registry credentials, or real external API keys.

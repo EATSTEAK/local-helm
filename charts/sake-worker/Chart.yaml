@@ -1,0 +1,5 @@
+apiVersion: v2
+name: sake-worker
+description: Sake worker service
+version: 0.1.0
+appVersion: "main"

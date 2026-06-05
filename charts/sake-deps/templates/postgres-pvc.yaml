@@ -1,0 +1,23 @@
+{{- if and .Values.postgres.enabled .Values.postgres.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.postgres.persistence.claimName }}
+  namespace: {{ include "sake-deps.namespace" . }}
+  labels:
+    {{- include "sake-deps.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "sake-deps.postgresName" . }}
+    app.kubernetes.io/component: postgres
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    {{- toYaml .Values.postgres.persistence.accessModes | nindent 4 }}
+  {{- with .Values.postgres.persistence.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.postgres.persistence.size | quote }}
+  volumeMode: {{ .Values.postgres.persistence.volumeMode }}
+{{- end }}

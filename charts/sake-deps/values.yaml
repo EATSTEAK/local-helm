@@ -1,0 +1,103 @@
+namespace: ""
+appName: sake
+
+secret:
+  name: sake-dev-secrets
+  apiKey: sake-dev-key
+  postgresPassword: sake-local-password
+  minioAccessKey: sake
+  minioSecretKey: sake-local-secret
+
+postgres:
+  enabled: true
+  image:
+    repository: pgvector/pgvector
+    tag: pg16
+    pullPolicy: IfNotPresent
+  database: sake
+  username: sake
+  service:
+    port: 5432
+  persistence:
+    enabled: true
+    claimName: sake-postgres-data
+    storageClassName: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 8Gi
+    volumeMode: Filesystem
+    mountPath: /var/lib/postgresql/data
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+redis:
+  enabled: true
+  image:
+    repository: redis
+    tag: 7-alpine
+    pullPolicy: IfNotPresent
+  service:
+    port: 6379
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+minio:
+  enabled: true
+  image:
+    repository: minio/minio
+    tag: RELEASE.2025-09-07T16-13-09Z
+    pullPolicy: IfNotPresent
+  service:
+    apiPort: 9000
+    consolePort: 9001
+  bucket: sake-dev
+  persistence:
+    enabled: true
+    claimName: sake-minio-data
+    storageClassName: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 10Gi
+    volumeMode: Filesystem
+    mountPath: /data
+  bucketJob:
+    image:
+      repository: minio/mc
+      tag: latest
+      pullPolicy: IfNotPresent
+    backoffLimit: 6
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+
+crawl4ai:
+  enabled: true
+  image:
+    repository: unclecode/crawl4ai
+    tag: basic
+    pullPolicy: IfNotPresent
+  service:
+    port: 11235
+  shm:
+    sizeLimit: 1Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 2Gi

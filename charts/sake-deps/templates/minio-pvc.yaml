@@ -1,0 +1,23 @@
+{{- if and .Values.minio.enabled .Values.minio.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.minio.persistence.claimName }}
+  namespace: {{ include "sake-deps.namespace" . }}
+  labels:
+    {{- include "sake-deps.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "sake-deps.minioName" . }}
+    app.kubernetes.io/component: minio
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    {{- toYaml .Values.minio.persistence.accessModes | nindent 4 }}
+  {{- with .Values.minio.persistence.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.minio.persistence.size | quote }}
+  volumeMode: {{ .Values.minio.persistence.volumeMode }}
+{{- end }}

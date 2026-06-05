@@ -1,0 +1,14 @@
+namespace: sake
+
+image:
+  repository: ghcr.io/triflam/sake-api
+  tag: main-deafa1f
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ghcr-auth
+
+ingress:
+  enabled: true
+  className: nginx
+  host: sake.koohyom.in

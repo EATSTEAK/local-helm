@@ -1,0 +1,14 @@
+{{- if .Values.postgres.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "sake-deps.postgresName" . }}-init
+  namespace: {{ include "sake-deps.namespace" . }}
+  labels:
+    {{- include "sake-deps.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "sake-deps.postgresName" . }}
+    app.kubernetes.io/component: postgres
+data:
+  001-init.sql: |
+    CREATE EXTENSION IF NOT EXISTS vector;
+{{- end }}

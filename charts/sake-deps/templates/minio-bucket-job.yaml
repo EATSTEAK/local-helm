@@ -1,0 +1,52 @@
+{{- if and .Values.minio.enabled .Values.minio.bucket }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "sake-deps.minioName" . }}-bucket-{{ .Release.Revision }}
+  namespace: {{ include "sake-deps.namespace" . }}
+  labels:
+    {{- include "sake-deps.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "sake-deps.minioName" . }}
+    app.kubernetes.io/component: minio-bucket
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.minio.bucketJob.backoffLimit }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "sake-deps.minioName" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: minio-bucket
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: create-bucket
+          image: "{{ .Values.minio.bucketJob.image.repository }}:{{ .Values.minio.bucketJob.image.tag }}"
+          imagePullPolicy: {{ .Values.minio.bucketJob.image.pullPolicy }}
+          env:
+            - name: MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: MINIO_ACCESS_KEY
+            - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secret.name }}
+                  key: MINIO_SECRET_KEY
+            - name: MINIO_ENDPOINT
+              value: {{ printf "http://%s:%v" (include "sake-deps.minioName" .) .Values.minio.service.apiPort | quote }}
+            - name: MINIO_BUCKET
+              value: {{ .Values.minio.bucket | quote }}
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              until mc alias set local "${MINIO_ENDPOINT}" "${MINIO_ACCESS_KEY}" "${MINIO_SECRET_KEY}"; do
+                sleep 2
+              done
+              mc mb --ignore-existing "local/${MINIO_BUCKET}"
+{{- end }}

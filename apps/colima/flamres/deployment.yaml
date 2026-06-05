@@ -21,8 +21,8 @@ spec:
         runAsUser: 1000
       containers:
         - name: bot
-          image: flamres:local
-          imagePullPolicy: Never
+          image: ghcr.io/triflam/flamres-bot:main-e5e3953
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: flamres-config

@@ -1,16 +1,12 @@
 namespace: flamres
-
 image:
   repository: ghcr.io/triflam/flamres-bot
-  tag: main-60b5df1
+  tag: main-0fcdc35
   pullPolicy: IfNotPresent
-
 imagePullSecrets:
   - name: ghcr-auth
-
 configMap:
   name: flamres-config
-
 config:
   CANVAS_PUBLISH_URL: http://canvas.default.svc.cluster.local/api/v1/publish
   LOG_LEVEL: info
@@ -35,11 +31,9 @@ config:
   SLACK_MCP_ENABLED_TOOLS: conversations_history,conversations_replies,channels_list,users_search
   SLACK_MCP_MARK_TOOL: ""
   THREAD_SESSION_STORE_PATH: /home/node/.local/share/triflam-bot/thread-sessions.json
-
 secretRef:
   enabled: true
   name: flamres-secrets
-
 persistence:
   opencodeData:
     enabled: true

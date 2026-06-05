@@ -47,8 +47,8 @@ Application Ingresses publish Cloudflare Tunnel CNAME records through ExternalDN
 ```yaml
 metadata:
   annotations:
-    external-dns.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
-    external-dns.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.alpha.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
 ```
 
 ## Local Cluster Management

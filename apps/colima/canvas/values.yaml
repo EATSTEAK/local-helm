@@ -2,7 +2,7 @@ namespace: default
 
 image:
   repository: ghcr.io/eatsteak/canvas.koohyom.in
-  tag: local
+  tag: main-5178937
   pullPolicy: IfNotPresent
 
 imagePullSecrets:

@@ -1,0 +1,71 @@
+nameOverride: ""
+fullnameOverride: ""
+namespace: ""
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/triflam/flamres-bot
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 3000
+  targetPort: http
+
+container:
+  name: bot
+  port: 3000
+
+securityContext:
+  fsGroup: 1000
+  runAsGroup: 1000
+  runAsUser: 1000
+
+configMap:
+  name: flamres-config
+
+config: {}
+
+secretRef:
+  enabled: true
+  name: flamres-secrets
+
+resources:
+  limits:
+    cpu: "1"
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+persistence:
+  opencodeData:
+    enabled: true
+    create: true
+    volumeName: opencode-data
+    claimName: flamres-opencode-data
+    annotations:
+      helm.sh/resource-policy: keep
+    storageClassName: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+    volumeMode: Filesystem
+    mountPath: /home/node/.local
+  workdir:
+    enabled: true
+    create: true
+    volumeName: opencode-workdir
+    claimName: flamres-workdir
+    annotations:
+      helm.sh/resource-policy: keep
+    storageClassName: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 2Gi
+    volumeMode: Filesystem
+    mountPath: /workspace

@@ -1,8 +1,13 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: flamres
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+  - name: flamres-values
+    files:
+      - values.yaml=values.yaml
 resources:
   - namespace.yaml
-  - configmap.yaml
   - pvc.yaml
-  - deployment.yaml
-  - service.yaml
+  - helmrelease.yaml

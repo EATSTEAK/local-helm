@@ -1,0 +1,45 @@
+{{- if and .Values.persistence.opencodeData.enabled .Values.persistence.opencodeData.create }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.persistence.opencodeData.claimName }}
+  namespace: {{ include "flamres.namespace" . }}
+  labels:
+    {{- include "flamres.labels" . | nindent 4 }}
+  {{- with .Values.persistence.opencodeData.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- toYaml .Values.persistence.opencodeData.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.opencodeData.size }}
+  storageClassName: {{ .Values.persistence.opencodeData.storageClassName }}
+  volumeMode: {{ .Values.persistence.opencodeData.volumeMode }}
+{{- end }}
+{{- if and .Values.persistence.opencodeData.enabled .Values.persistence.opencodeData.create .Values.persistence.workdir.enabled .Values.persistence.workdir.create }}
+---
+{{- end }}
+{{- if and .Values.persistence.workdir.enabled .Values.persistence.workdir.create }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.persistence.workdir.claimName }}
+  namespace: {{ include "flamres.namespace" . }}
+  labels:
+    {{- include "flamres.labels" . | nindent 4 }}
+  {{- with .Values.persistence.workdir.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- toYaml .Values.persistence.workdir.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.workdir.size }}
+  storageClassName: {{ .Values.persistence.workdir.storageClassName }}
+  volumeMode: {{ .Values.persistence.workdir.volumeMode }}
+{{- end }}

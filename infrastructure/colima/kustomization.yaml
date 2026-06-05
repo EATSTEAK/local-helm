@@ -3,6 +3,6 @@ kind: Kustomization
 resources:
   - namespaces.yaml
   - sources/helmrepositories.yaml
-  - controllers/ingress-nginx.yaml
-  - controllers/cloudflare-tunnel.yaml
-  - controllers/external-dns.yaml
+  - controllers/ingress-nginx
+  - controllers/cloudflare-tunnel
+  - controllers/external-dns

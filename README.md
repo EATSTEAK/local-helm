@@ -53,7 +53,7 @@ metadata:
 
 ## Local Cluster Management
 
-This repository includes a Colima profile config in `config/colima/default.yaml`.
+This repository includes a Colima profile config in `config/colima/values.yaml`.
 The local cluster is configured for Kubernetes with `6GiB` memory.
 
 If you have `just` installed, common workflows are available through `justfile`:

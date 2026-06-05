@@ -1,0 +1,22 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: canvas
+  namespace: default
+spec:
+  interval: 10m0s
+  releaseName: canvas
+  targetNamespace: default
+  chart:
+    spec:
+      chart: ./charts/canvas
+      interval: 10m0s
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: canvas-values
+      valuesKey: values.yaml

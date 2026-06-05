@@ -1,0 +1,10 @@
+controller:
+  admissionWebhooks:
+    enabled: true
+  ingressClass: nginx
+  ingressClassResource:
+    default: false
+    enabled: true
+    name: nginx
+  service:
+    type: ClusterIP

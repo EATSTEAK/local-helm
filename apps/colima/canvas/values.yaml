@@ -1,0 +1,40 @@
+namespace: default
+
+image:
+  repository: canvas-koohyomin
+  tag: local
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ghcr-auth
+
+env:
+  PUBLIC_BASE_URL: https://canvas.koohyom.in
+  DATA_DIR: /data
+  MAX_BODY_BYTES: "5242880"
+
+ingress:
+  enabled: true
+  className: nginx
+  host: canvas.koohyom.in
+  annotations:
+    external-dns.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
+  paths:
+    - path: /view
+      pathType: Prefix
+    - path: /content
+      pathType: Prefix
+    - path: /healthz
+      pathType: Exact
+
+persistence:
+  enabled: true
+  create: false
+  name: canvas-data
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  volumeMode: Filesystem
+  mountPath: /data

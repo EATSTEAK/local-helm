@@ -1,9 +1,13 @@
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 
 profile := "default"
-colima_config := "config/colima/default.yaml"
-chart := "charts/cloudflare-kube-tunnel"
-chart_values := "charts/cloudflare-kube-tunnel/examples/values-colima.yaml"
+colima_config := "config/colima/values.yaml"
+cloudflare_chart := "charts/cloudflare-kube-tunnel"
+cloudflare_chart_values := "infrastructure/colima/controllers/cloudflare-tunnel/values.yaml"
+canvas_chart := "charts/canvas"
+canvas_chart_values := "apps/colima/canvas/values.yaml"
+flamres_chart := "charts/flamres"
+flamres_chart_values := "apps/colima/flamres/values.yaml"
 release := "cloudflare-tunnel"
 namespace := "cloudflare-tunnel"
 
@@ -29,14 +33,16 @@ colima-status:
     colima list
 
 helm-deps:
-    helm dependency update {{chart}}
+    helm dependency update {{cloudflare_chart}}
 
 helm-lint: helm-deps
-    helm lint {{chart}}
-    helm lint {{chart}} -f {{chart_values}}
+    helm lint {{cloudflare_chart}}
+    helm lint {{cloudflare_chart}} -f {{cloudflare_chart_values}}
+    helm lint {{canvas_chart}} -f {{canvas_chart_values}}
+    helm lint {{flamres_chart}} -f {{flamres_chart_values}}
 
 cluster-install: helm-deps
-    helm upgrade --install {{release}} ./{{chart}} --namespace {{namespace}} --create-namespace -f {{chart_values}}
+    helm upgrade --install {{release}} ./{{cloudflare_chart}} --namespace {{namespace}} --create-namespace -f {{cloudflare_chart_values}}
 
 cluster-uninstall:
     helm uninstall {{release}} --namespace {{namespace}} --ignore-not-found
@@ -59,7 +65,6 @@ cluster-inventory:
     helm list -A
 
 apps-status:
-    kubectl rollout status deploy/whoami -n default
     kubectl rollout status deploy/canvas -n default
     kubectl rollout status deploy/flamres -n flamres
     kubectl get deploy,svc,ingress,pvc -n default

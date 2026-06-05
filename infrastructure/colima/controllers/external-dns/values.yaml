@@ -1,0 +1,31 @@
+domainFilters:
+  - koohyom.in
+
+env:
+  - name: CF_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        key: api-token
+        name: cloudflare-api-token
+
+extraArgs:
+  cloudflare-dns-records-per-page: "5000"
+
+interval: 1m
+
+managedRecordTypes:
+  - CNAME
+
+policy: sync
+
+provider:
+  name: cloudflare
+
+registry: txt
+
+sources:
+  - ingress
+
+triggerLoopOnEvent: true
+
+txtOwnerId: colima-k8s-koohyomin

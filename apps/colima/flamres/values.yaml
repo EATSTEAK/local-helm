@@ -1,9 +1,17 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
+namespace: flamres
+
+image:
+  repository: ghcr.io/triflam/flamres-bot
+  tag: main-e5e3953
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ghcr-auth
+
+configMap:
   name: flamres-config
-  namespace: flamres
-data:
+
+config:
   CANVAS_PUBLISH_URL: http://canvas.default.svc.cluster.local/api/v1/publish
   LOG_LEVEL: info
   MCP_LINEAR_ENABLED: "true"
@@ -27,3 +35,31 @@ data:
   SLACK_MCP_ENABLED_TOOLS: conversations_history,conversations_replies,channels_list,users_search
   SLACK_MCP_MARK_TOOL: ""
   THREAD_SESSION_STORE_PATH: /home/node/.local/share/triflam-bot/thread-sessions.json
+
+secretRef:
+  enabled: true
+  name: flamres-secrets
+
+persistence:
+  opencodeData:
+    enabled: true
+    create: false
+    volumeName: opencode-data
+    claimName: flamres-opencode-data
+    storageClassName: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+    volumeMode: Filesystem
+    mountPath: /home/node/.local
+  workdir:
+    enabled: true
+    create: false
+    volumeName: opencode-workdir
+    claimName: flamres-workdir
+    storageClassName: local-path
+    accessModes:
+      - ReadWriteOnce
+    size: 2Gi
+    volumeMode: Filesystem
+    mountPath: /workspace

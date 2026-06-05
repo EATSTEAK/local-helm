@@ -1,0 +1,22 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flamres
+  namespace: flamres
+spec:
+  interval: 10m0s
+  releaseName: flamres
+  targetNamespace: flamres
+  chart:
+    spec:
+      chart: ./charts/flamres
+      interval: 10m0s
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: flamres-values
+      valuesKey: values.yaml

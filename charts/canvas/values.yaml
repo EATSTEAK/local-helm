@@ -1,0 +1,61 @@
+nameOverride: ""
+fullnameOverride: ""
+namespace: ""
+
+replicaCount: 1
+
+image:
+  repository: canvas-koohyomin
+  tag: local
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: http
+
+container:
+  port: 3000
+
+env:
+  PUBLIC_BASE_URL: ""
+  DATA_DIR: /data
+  MAX_BODY_BYTES: "5242880"
+
+ingress:
+  enabled: false
+  className: nginx
+  host: ""
+  annotations: {}
+  paths:
+    - path: /view
+      pathType: Prefix
+    - path: /content
+      pathType: Prefix
+    - path: /healthz
+      pathType: Exact
+
+persistence:
+  enabled: true
+  create: true
+  name: canvas-data
+  annotations:
+    helm.sh/resource-policy: keep
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  volumeMode: Filesystem
+  mountPath: /data
+
+probes:
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  readiness:
+    path: /healthz
+    initialDelaySeconds: 2
+    periodSeconds: 5

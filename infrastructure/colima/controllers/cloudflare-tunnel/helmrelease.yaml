@@ -1,0 +1,22 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cloudflare-tunnel
+  namespace: cloudflare-tunnel
+spec:
+  interval: 10m0s
+  releaseName: cloudflare-tunnel
+  targetNamespace: cloudflare-tunnel
+  chart:
+    spec:
+      chart: ./charts/cloudflare-kube-tunnel
+      interval: 10m0s
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: cloudflare-tunnel-values
+      valuesKey: values.yaml

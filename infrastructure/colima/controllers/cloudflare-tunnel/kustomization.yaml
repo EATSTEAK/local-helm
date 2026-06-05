@@ -1,12 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: default
+namespace: cloudflare-tunnel
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:
-  - name: canvas-values
+  - name: cloudflare-tunnel-values
     files:
       - values.yaml=values.yaml
 resources:
-  - pvc.yaml
   - helmrelease.yaml

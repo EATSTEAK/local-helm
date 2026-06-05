@@ -3,8 +3,9 @@ set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 profile := "default"
 colima_config := "config/colima/default.yaml"
 chart := "charts/cloudflare-kube-tunnel"
-release := "cloudflare-kube-tunnel"
-namespace := "default"
+chart_values := "charts/cloudflare-kube-tunnel/examples/values-colima.yaml"
+release := "cloudflare-tunnel"
+namespace := "cloudflare-tunnel"
 
 default:
     @just --list
@@ -32,15 +33,13 @@ helm-deps:
 
 helm-lint: helm-deps
     helm lint {{chart}}
+    helm lint {{chart}} -f {{chart_values}}
 
 cluster-install: helm-deps
-    helm upgrade --install {{release}} ./{{chart}} --namespace {{namespace}}
+    helm upgrade --install {{release}} ./{{chart}} --namespace {{namespace}} --create-namespace -f {{chart_values}}
 
 cluster-uninstall:
     helm uninstall {{release}} --namespace {{namespace}} --ignore-not-found
-
-package:
-    ./scripts/package.sh
 
 flux-status:
     flux get sources git -A

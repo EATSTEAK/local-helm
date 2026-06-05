@@ -194,4 +194,37 @@ tag: main-<sha>
 targets: [{"file":"apps/colima/flamres/values.yaml","path":"image.tag"}]
 ```
 
+To dispatch the same workflow from another GitHub Actions workflow, use the composite action. It always dispatches `eatsteak/local-helm`.
+
+Same-repository callers can use `${{ github.token }}` with `actions: write` permission. Callers from other repositories must pass a PAT or GitHub App installation token with Actions write access to `eatsteak/local-helm`.
+
+```yaml
+permissions:
+  actions: write
+
+steps:
+  - name: Dispatch Sake image tag update
+    uses: eatsteak/local-helm/.github/actions/dispatch-update-image-tag@main
+    with:
+      github-token: ${{ github.token }}
+      app: sake
+      tag: main-<sha>
+      targets: >-
+        [{"file":"apps/colima/sake/api-values.yaml","path":"image.tag"},{"file":"apps/colima/sake/worker-values.yaml","path":"image.tag"}]
+```
+
+For Flamres, use:
+
+```yaml
+steps:
+  - name: Dispatch Flamres image tag update
+    uses: eatsteak/local-helm/.github/actions/dispatch-update-image-tag@main
+    with:
+      github-token: ${{ secrets.LOCAL_HELM_ACTIONS_TOKEN }}
+      app: flamres
+      tag: main-<sha>
+      targets: >-
+        [{"file":"apps/colima/flamres/values.yaml","path":"image.tag"}]
+```
+
 Do not commit rendered Secrets, Cloudflare API tokens, tunnel credential JSON files, registry credentials, or real external API keys.

@@ -1,0 +1,148 @@
+name: Dispatch update image tag
+description: Dispatch the update-image-tag workflow in eatsteak/local-helm.
+
+inputs:
+  github-token:
+    description: GitHub token with actions:write permission for eatsteak/local-helm.
+    required: true
+  app:
+    description: Application name to pass to the update-image-tag workflow.
+    required: true
+  tag:
+    description: Image tag to pass to the update-image-tag workflow.
+    required: true
+  targets:
+    description: JSON array of {file,path} targets to pass to the update-image-tag workflow.
+    required: true
+  ref:
+    description: Git ref to dispatch the workflow on.
+    required: false
+    default: main
+  workflow-file:
+    description: Workflow file name to dispatch.
+    required: false
+    default: update-image-tag.yaml
+  api-url:
+    description: GitHub API base URL. Defaults to GITHUB_API_URL, then https://api.github.com.
+    required: false
+    default: ""
+
+outputs:
+  repository:
+    description: Repository that received the workflow dispatch.
+    value: ${{ steps.dispatch.outputs.repository }}
+  ref:
+    description: Git ref used for the workflow dispatch.
+    value: ${{ steps.dispatch.outputs.ref }}
+  workflow-file:
+    description: Workflow file used for the workflow dispatch.
+    value: ${{ steps.dispatch.outputs['workflow-file'] }}
+  workflow-url:
+    description: URL of the dispatched workflow.
+    value: ${{ steps.dispatch.outputs['workflow-url'] }}
+
+runs:
+  using: composite
+  steps:
+    - name: Dispatch update-image-tag workflow
+      id: dispatch
+      shell: bash
+      env:
+        INPUT_GITHUB_TOKEN: ${{ inputs.github-token }}
+        INPUT_APP: ${{ inputs.app }}
+        INPUT_TAG: ${{ inputs.tag }}
+        INPUT_TARGETS: ${{ inputs.targets }}
+        INPUT_REF: ${{ inputs.ref }}
+        INPUT_WORKFLOW_FILE: ${{ inputs.workflow-file }}
+        INPUT_API_URL: ${{ inputs.api-url }}
+      run: |
+        set -euo pipefail
+
+        fail() {
+          echo "::error::$1"
+          exit 1
+        }
+
+        require_cmd() {
+          if ! command -v "$1" > /dev/null 2>&1; then
+            fail "$1 is required to dispatch the update-image-tag workflow"
+          fi
+        }
+
+        require_non_empty() {
+          local name="$1"
+          local value="$2"
+          if [[ -z "$value" ]]; then
+            fail "$name is required"
+          fi
+        }
+
+        require_cmd curl
+        require_cmd jq
+
+        repository="eatsteak/local-helm"
+        github_token="$INPUT_GITHUB_TOKEN"
+        app="$INPUT_APP"
+        tag="$INPUT_TAG"
+        targets="$INPUT_TARGETS"
+        ref="$INPUT_REF"
+        workflow_file="$INPUT_WORKFLOW_FILE"
+        api_url="${INPUT_API_URL:-${GITHUB_API_URL:-https://api.github.com}}"
+        api_url="${api_url%/}"
+
+        require_non_empty github-token "$github_token"
+        require_non_empty app "$app"
+        require_non_empty tag "$tag"
+        require_non_empty targets "$targets"
+        require_non_empty ref "$ref"
+        require_non_empty workflow-file "$workflow_file"
+        require_non_empty api-url "$api_url"
+
+        if [[ ! "$repository" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+          fail "Invalid repository: $repository"
+        fi
+
+        if ! jq -e '
+          type == "array"
+          and length > 0
+          and all(.[]; type == "object"
+            and (.file | type == "string" and length > 0)
+            and (.path | type == "string" and length > 0))
+        ' <<< "$targets" > /dev/null; then
+          fail 'targets must be a non-empty JSON array of {file,path} objects'
+        fi
+
+        normalized_targets="$(jq -c '.' <<< "$targets")"
+        payload="$(
+          jq -nc \
+            --arg ref "$ref" \
+            --arg app "$app" \
+            --arg tag "$tag" \
+            --arg targets "$normalized_targets" \
+            '{ref: $ref, inputs: {app: $app, tag: $tag, targets: $targets}}'
+        )"
+
+        workflow_id="$(jq -rn --arg workflow_file "$workflow_file" '$workflow_file | @uri')"
+        endpoint="${api_url}/repos/${repository}/actions/workflows/${workflow_id}/dispatches"
+
+        curl \
+          --fail-with-body \
+          --silent \
+          --show-error \
+          --location \
+          --request POST \
+          "$endpoint" \
+          --header "Authorization: Bearer ${github_token}" \
+          --header "Accept: application/vnd.github+json" \
+          --header "X-GitHub-Api-Version: 2022-11-28" \
+          --header "Content-Type: application/json" \
+          --data "$payload"
+
+        workflow_url="https://github.com/${repository}/actions/workflows/${workflow_file}"
+
+        {
+          echo "repository=$repository"
+          echo "ref=$ref"
+          echo "workflow-file=$workflow_file"
+          echo "workflow-url=$workflow_url"
+        } >> "$GITHUB_OUTPUT"

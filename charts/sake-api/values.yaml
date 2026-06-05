@@ -69,11 +69,11 @@ ingress:
 
 probes:
   liveness:
-    path: /healthz
+    path: /api/v1/healthz
     initialDelaySeconds: 10
     periodSeconds: 10
   readiness:
-    path: /readyz
+    path: /api/v1/readyz
     initialDelaySeconds: 5
     periodSeconds: 10
 

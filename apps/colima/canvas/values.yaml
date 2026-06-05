@@ -1,7 +1,7 @@
 namespace: default
 
 image:
-  repository: canvas-koohyomin
+  repository: ghcr.io/eatsteak/canvas.koohyom.in
   tag: local
   pullPolicy: IfNotPresent
 

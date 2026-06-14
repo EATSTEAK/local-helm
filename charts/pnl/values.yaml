@@ -26,13 +26,13 @@ sync:
   jobs:
     debank:
       schedule: "*/15 * * * *"
-      command: ["bun", "run", "apps/sync/src/index.ts", "debank"]
+      command: ["node", "apps/sync/dist/index.js", "debank"]
     ccxt:
       schedule: "*/10 * * * *"
-      command: ["bun", "run", "apps/sync/src/index.ts", "ccxt"]
+      command: ["node", "apps/sync/dist/index.js", "ccxt"]
     prices:
       schedule: "*/5 * * * *"
-      command: ["bun", "run", "apps/sync/src/index.ts", "prices"]
+      command: ["node", "apps/sync/dist/index.js", "prices"]
 
 config:
   NODE_ENV: production

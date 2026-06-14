@@ -1,0 +1,7 @@
+apiVersion: v2
+name: pnl
+description: Personal PnL dashboard web, API, and sync workloads
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+

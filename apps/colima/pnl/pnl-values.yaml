@@ -1,0 +1,83 @@
+namespace: pnl
+
+imagePullSecrets:
+  - name: ghcr-auth
+
+api:
+  image:
+    repository: ghcr.io/triflam/pnl-api
+    tag: main
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 3000
+
+web:
+  image:
+    repository: ghcr.io/triflam/pnl-web
+    tag: main
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 80
+
+sync:
+  image:
+    repository: ghcr.io/triflam/pnl-sync
+    tag: main
+    pullPolicy: IfNotPresent
+  jobs:
+    debank:
+      schedule: "*/15 * * * *"
+      command: ["bun", "run", "apps/sync/src/index.ts", "debank"]
+    ccxt:
+      schedule: "*/10 * * * *"
+      command: ["bun", "run", "apps/sync/src/index.ts", "ccxt"]
+    prices:
+      schedule: "*/5 * * * *"
+      command: ["bun", "run", "apps/sync/src/index.ts", "prices"]
+
+config:
+  NODE_ENV: production
+  API_PORT: "3000"
+  BASE_CURRENCY: KRW
+  SECONDARY_CURRENCY: USD
+  VITE_API_BASE_URL: https://pnl.koohyom.in
+  VITE_WS_URL: wss://pnl.koohyom.in/ws
+
+secretRefs:
+  - name: pnl-runtime-secrets
+    optional: false
+
+database:
+  urlSecretName: pnl-runtime-secrets
+  urlSecretKey: DATABASE_URL
+
+ingress:
+  enabled: true
+  className: nginx
+  host: pnl.koohyom.in
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.alpha.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
+
+resources:
+  api:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  web:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  sync:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi

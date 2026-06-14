@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pnl-migrations
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+data:
+  0001_initial.sql: |-
+{{ .Files.Get "files/migrations/0001_initial.sql" | indent 4 }}
+

@@ -1,0 +1,25 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: pnl
+  namespace: pnl
+spec:
+  interval: 10m0s
+  releaseName: pnl
+  targetNamespace: pnl
+  dependsOn:
+    - name: pnl-deps
+  chart:
+    spec:
+      chart: ./charts/pnl
+      interval: 10m0s
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: pnl-values
+      valuesKey: values.yaml
+

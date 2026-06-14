@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pnl-api
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  selector:
+    app.kubernetes.io/component: api
+    app.kubernetes.io/instance: {{ .Release.Name }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pnl-web
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  selector:
+    app.kubernetes.io/component: web
+    app.kubernetes.io/instance: {{ .Release.Name }}
+

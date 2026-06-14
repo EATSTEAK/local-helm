@@ -1,0 +1,40 @@
+{{- range $name, $job := .Values.sync.jobs }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pnl-sync-{{ $name }}
+  namespace: {{ $.Values.namespace | default $.Release.Namespace }}
+spec:
+  schedule: {{ $job.schedule | quote }}
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          restartPolicy: Never
+          imagePullSecrets:
+            {{- toYaml $.Values.imagePullSecrets | nindent 12 }}
+          containers:
+            - name: sync
+              image: "{{ $.Values.sync.image.repository }}:{{ $.Values.sync.image.tag }}"
+              imagePullPolicy: {{ $.Values.sync.image.pullPolicy }}
+              command:
+                {{- toYaml $job.command | nindent 16 }}
+              envFrom:
+                - configMapRef:
+                    name: pnl-config
+                {{- include "pnl.secretEnvFrom" $ | nindent 16 }}
+              env:
+                - name: DATABASE_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ $.Values.database.urlSecretName }}
+                      key: {{ $.Values.database.urlSecretKey }}
+              resources:
+                {{- toYaml $.Values.resources.sync | nindent 16 }}
+---
+{{- end }}
+

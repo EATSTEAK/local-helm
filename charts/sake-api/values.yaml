@@ -2,13 +2,16 @@ namespace: ""
 replicaCount: 1
 
 image:
-  repository: ghcr.io/triflam/sake-api
+  repository: ghcr.io/triflam/sake-app
   tag: ""
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
 
 container:
+  command:
+    - node
+    - apps/api/dist/main.js
   port: 3000
 
 configMap:

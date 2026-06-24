@@ -5,8 +5,8 @@ namespace: ""
 replicaCount: 1
 
 image:
-  repository: canvas-koohyomin
-  tag: local
+  repository: ghcr.io/eatsteak/canvas.koohyom.in
+  tag: main
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

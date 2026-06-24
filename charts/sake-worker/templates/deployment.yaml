@@ -25,6 +25,10 @@ spec:
         - name: worker
           image: "{{ .Values.image.repository }}:{{ required "sake-worker image.tag is required" .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{ with .Values.container.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{ end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           envFrom:

@@ -104,3 +104,8 @@ migration:
   enabled: true
   backoffLimit: 3
   hookWeight: "-5"
+
+masterSeed:
+  enabled: true
+  backoffLimit: 3
+  hookWeight: "-4"

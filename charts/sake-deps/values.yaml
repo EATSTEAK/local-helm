@@ -3,7 +3,6 @@ appName: sake
 
 secret:
   name: sake-dev-secrets
-  apiKey: sake-dev-key
   postgresPassword: sake-local-password
   minioAccessKey: sake
   minioSecretKey: sake-local-secret

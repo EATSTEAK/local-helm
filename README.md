@@ -127,9 +127,9 @@ These Kubernetes Secrets are maintained outside the chart and referenced by GitO
 - `flamres/ghcr-auth`, Docker registry credentials for `ghcr.io`
 - `flamres/flamres-secrets`
 - `sake/ghcr-auth`, Docker registry credentials for `ghcr.io`
-- `sake/sake-runtime-secrets`, optional runtime credentials such as `LLM_API_KEY` and `EMBEDDING_API_KEY`
+- `sake/sake-runtime-secrets`, runtime credentials such as `SAKE_ADMIN_EMAIL`, `SAKE_ADMIN_PASSWORD`, `LLM_API_KEY`, and `EMBEDDING_API_KEY`
 
-The Sake chart creates `sake/sake-dev-secrets` with local-only Postgres, MinIO, and `API_KEY` defaults. Do not put real external API keys in that chart-managed Secret.
+The Sake chart creates `sake/sake-dev-secrets` with local-only Postgres and MinIO defaults. Do not put real external API keys in that chart-managed Secret.
 
 Create or refresh the Cloudflare Secrets manually:
 
@@ -165,10 +165,12 @@ kubectl -n sake create secret docker-registry ghcr-auth \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-Create or refresh optional Sake runtime credentials before running jobs that call external LLM or embedding providers. The Colima Sake overlay currently uses the local OpenAI-compatible chat completions endpoint on `host.docker.internal:8317` and Gemini for embeddings:
+Create or refresh Sake runtime credentials before deploying the Sake API. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account after migrations. The Colima Sake overlay currently uses the local OpenAI-compatible chat completions endpoint on `host.docker.internal:8317` and Gemini for embeddings:
 
 ```sh
 kubectl -n sake create secret generic sake-runtime-secrets \
+  --from-literal=SAKE_ADMIN_EMAIL='<master-admin-email>' \
+  --from-literal=SAKE_ADMIN_PASSWORD='<master-admin-password>' \
   --from-literal=LLM_API_KEY='<local-llm-api-key-or-placeholder>' \
   --from-literal=EMBEDDING_API_KEY='<gemini-api-key>' \
   --dry-run=client -o yaml | kubectl apply -f -

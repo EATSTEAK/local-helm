@@ -11,6 +11,7 @@ config:
   EMBEDDING_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai
   EMBEDDING_MODEL: gemini-embedding-2-preview
   EMBEDDING_DIMENSIONS: "1536"
+  BETTER_AUTH_TRUSTED_ORIGINS: https://sake.triflam.team,https://sake.koohyom.in
 ingress:
   enabled: true
   className: nginx

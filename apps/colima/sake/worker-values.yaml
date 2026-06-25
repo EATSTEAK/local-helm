@@ -11,3 +11,9 @@ config:
   EMBEDDING_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai
   EMBEDDING_MODEL: gemini-embedding-2
   EMBEDDING_DIMENSIONS: "1536"
+  RESEARCH_CRAWL_ENABLED: "true"
+  RESEARCH_SEARCH_ENABLED: "true"
+  RESEARCH_SEARCH_PROVIDER: tavily
+  LANGSMITH_TRACING: "true"
+  LANGSMITH_PROJECT: sake-local
+  LANGSMITH_FULL_TRACE_MODE: "off"

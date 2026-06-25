@@ -127,7 +127,7 @@ These Kubernetes Secrets are maintained outside the chart and referenced by GitO
 - `flamres/ghcr-auth`, Docker registry credentials for `ghcr.io`
 - `flamres/flamres-secrets`
 - `sake/ghcr-auth`, Docker registry credentials for `ghcr.io`
-- `sake/sake-runtime-secrets`, runtime credentials such as `SAKE_ADMIN_EMAIL`, `SAKE_ADMIN_PASSWORD`, `LLM_API_KEY`, and `EMBEDDING_API_KEY`
+- `sake/sake-runtime-secrets`, runtime credentials such as `SAKE_ADMIN_EMAIL`, `SAKE_ADMIN_PASSWORD`, `LLM_API_KEY`, `EMBEDDING_API_KEY`, `TAVILY_API_KEY`, and `LANGSMITH_API_KEY`
 
 The Sake chart creates `sake/sake-dev-secrets` with local-only Postgres and MinIO defaults. Do not put real external API keys in that chart-managed Secret.
 
@@ -165,7 +165,7 @@ kubectl -n sake create secret docker-registry ghcr-auth \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-Create or refresh Sake runtime credentials before deploying the Sake API. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account after migrations. The Colima Sake overlay currently uses the local OpenAI-compatible chat completions endpoint on `host.docker.internal:8317` and Gemini for embeddings:
+Create or refresh Sake runtime credentials before deploying the Sake API and worker. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account after migrations. The Colima Sake overlay currently uses the local OpenAI-compatible chat completions endpoint on `host.docker.internal:8317`, Gemini for embeddings, Tavily for agentic lead research search, and LangSmith tracing for worker research traces:
 
 ```sh
 kubectl -n sake create secret generic sake-runtime-secrets \
@@ -173,7 +173,15 @@ kubectl -n sake create secret generic sake-runtime-secrets \
   --from-literal=SAKE_ADMIN_PASSWORD='<master-admin-password>' \
   --from-literal=LLM_API_KEY='<local-llm-api-key-or-placeholder>' \
   --from-literal=EMBEDDING_API_KEY='<gemini-api-key>' \
+  --from-literal=TAVILY_API_KEY='<tavily-api-key>' \
+  --from-literal=LANGSMITH_API_KEY='<langsmith-api-key>' \
   --dry-run=client -o yaml | kubectl apply -f -
+```
+
+If you refresh `sake-runtime-secrets` without changing the Helm values or image tag, restart the running pods so `envFrom` picks up the new Secret data:
+
+```sh
+kubectl -n sake rollout restart deployment/sake-api deployment/sake-worker
 ```
 
 Sake GHCR packages should remain private. After the `Release images` workflow pushes `ghcr.io/triflam/sake-api:main-<sha>` and `ghcr.io/triflam/sake-worker:main-<sha>`, update the pinned tags with the **Update image tag** GitHub Actions workflow.

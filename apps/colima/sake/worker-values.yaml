@@ -18,3 +18,4 @@ config:
   LANGSMITH_ENDPOINT: https://apac.api.smith.langchain.com
   LANGSMITH_PROJECT: sake-local
   LANGSMITH_FULL_TRACE_MODE: "off"
+  CRAWL4AI_USER_AGENT: "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/116.0.0.0 Safari/537.36"

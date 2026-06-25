@@ -15,5 +15,6 @@ config:
   RESEARCH_SEARCH_ENABLED: "true"
   RESEARCH_SEARCH_PROVIDER: tavily
   LANGSMITH_TRACING: "true"
+  LANGSMITH_ENDPOINT: https://apac.api.smith.langchain.com
   LANGSMITH_PROJECT: sake-local
   LANGSMITH_FULL_TRACE_MODE: "off"

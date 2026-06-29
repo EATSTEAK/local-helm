@@ -1,7 +1,7 @@
 namespace: ns2-alert-bot
 image:
   repository: ghcr.io/eatsteak/ns2-alert-bot
-  tag: main-9105b0c6591153a312ae645dda6478955a9d67c6
+  tag: main-07e83f6273f314b1bd07fd9a901fbd31b1efbdd2
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: ghcr-auth

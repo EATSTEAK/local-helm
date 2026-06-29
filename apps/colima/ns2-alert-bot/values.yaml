@@ -1,6 +1,6 @@
 namespace: ns2-alert-bot
 image:
-  repository: ghcr.io/EATSTEAK/ns2-alert-bot
+  repository: ghcr.io/eatsteak/ns2-alert-bot
   tag: main
   pullPolicy: IfNotPresent
 imagePullSecrets:

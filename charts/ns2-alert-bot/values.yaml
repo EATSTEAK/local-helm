@@ -2,7 +2,7 @@ namespace: ""
 replicaCount: 1
 
 image:
-  repository: ghcr.io/EATSTEAK/ns2-alert-bot
+  repository: ghcr.io/eatsteak/ns2-alert-bot
   tag: main
   pullPolicy: IfNotPresent
 

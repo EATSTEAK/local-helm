@@ -1,0 +1,59 @@
+namespace: ""
+replicaCount: 1
+
+image:
+  repository: ghcr.io/EATSTEAK/ns2-alert-bot
+  tag: main
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+container:
+  name: worker
+  command:
+    - ns2-alert-bot
+    - run
+    - --config
+    - /app/config/targets.yaml
+
+configMap:
+  name: ns2-alert-bot-config
+
+config:
+  POLL_INTERVAL_SECONDS: "60"
+  STATE_DB_PATH: /data/ns2-alert-bot.sqlite3
+  HTTP_TIMEOUT_SECONDS: "15"
+  HTTP_USER_AGENT: "ns2-alert-bot/0.1 (+https://github.com/triflam/ns2-alert-bot)"
+
+secretRefs:
+  - name: ns2-alert-bot-runtime-secrets
+    optional: false
+
+persistence:
+  enabled: true
+  claimName: ns2-alert-bot-data
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  mountPath: /data
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

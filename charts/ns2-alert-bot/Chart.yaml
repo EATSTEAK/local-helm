@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ns2-alert-bot
+description: Telegram stock alert worker for Nintendo Switch 2 retailers.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

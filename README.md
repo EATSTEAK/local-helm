@@ -126,6 +126,8 @@ These Kubernetes Secrets are maintained outside the chart and referenced by GitO
 - `default/ghcr-auth`, Docker registry credentials for `ghcr.io`
 - `flamres/ghcr-auth`, Docker registry credentials for `ghcr.io`
 - `flamres/flamres-secrets`
+- `ns2-alert-bot/ghcr-auth`, Docker registry credentials for `ghcr.io`
+- `ns2-alert-bot/ns2-alert-bot-runtime-secrets`, runtime credentials such as `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and optional `TELEGRAM_THREAD_ID`
 - `sake/ghcr-auth`, Docker registry credentials for `ghcr.io`
 - `sake/sake-runtime-secrets`, runtime credentials such as `SAKE_ADMIN_EMAIL`, `SAKE_ADMIN_PASSWORD`, `LLM_API_KEY`, `EMBEDDING_API_KEY`, `TAVILY_API_KEY`, and `LANGSMITH_API_KEY`
 
@@ -158,6 +160,12 @@ kubectl -n flamres create secret docker-registry ghcr-auth \
   --docker-password='<github-token>' \
   --dry-run=client -o yaml | kubectl apply -f -
 
+kubectl -n ns2-alert-bot create secret docker-registry ghcr-auth \
+  --docker-server=ghcr.io \
+  --docker-username='<github-username>' \
+  --docker-password='<github-token-with-read-packages>' \
+  --dry-run=client -o yaml | kubectl apply -f -
+
 kubectl -n sake create secret docker-registry ghcr-auth \
   --docker-server=ghcr.io \
   --docker-username='<github-username>' \
@@ -175,6 +183,17 @@ kubectl -n sake create secret generic sake-runtime-secrets \
   --from-literal=EMBEDDING_API_KEY='<gemini-api-key>' \
   --from-literal=TAVILY_API_KEY='<tavily-api-key>' \
   --from-literal=LANGSMITH_API_KEY='<langsmith-api-key>' \
+  --dry-run=client -o yaml | kubectl apply -f -
+```
+
+Create or refresh NS2 alert bot runtime credentials before deploying the worker:
+
+```sh
+kubectl create namespace ns2-alert-bot --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl -n ns2-alert-bot create secret generic ns2-alert-bot-runtime-secrets \
+  --from-literal=TELEGRAM_BOT_TOKEN='<telegram-bot-token>' \
+  --from-literal=TELEGRAM_CHAT_ID='<telegram-chat-id-or-channel>' \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
@@ -202,6 +221,14 @@ For Flamres, run the workflow with:
 app: flamres
 tag: main-<sha>
 targets: [{"file":"apps/colima/flamres/values.yaml","path":"image.tag"}]
+```
+
+For NS2 Alert Bot, run the workflow with:
+
+```text
+app: ns2-alert-bot
+tag: main-<sha>
+targets: [{"file":"apps/colima/ns2-alert-bot/values.yaml","path":"image.tag"}]
 ```
 
 To dispatch the same workflow from another GitHub Actions workflow, use the composite action. It always dispatches `eatsteak/local-helm`.
@@ -235,6 +262,20 @@ steps:
       tag: main-<sha>
       targets: >-
         [{"file":"apps/colima/flamres/values.yaml","path":"image.tag"}]
+```
+
+For NS2 Alert Bot, use:
+
+```yaml
+steps:
+  - name: Dispatch NS2 Alert Bot image tag update
+    uses: eatsteak/local-helm/.github/actions/dispatch-update-image-tag@main
+    with:
+      github-token: ${{ secrets.LOCAL_HELM_ACTIONS_TOKEN }}
+      app: ns2-alert-bot
+      tag: main-<sha>
+      targets: >-
+        [{"file":"apps/colima/ns2-alert-bot/values.yaml","path":"image.tag"}]
 ```
 
 Do not commit rendered Secrets, Cloudflare API tokens, tunnel credential JSON files, registry credentials, or real external API keys.

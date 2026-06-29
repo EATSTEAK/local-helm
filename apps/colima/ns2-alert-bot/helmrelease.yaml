@@ -1,0 +1,22 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: ns2-alert-bot
+  namespace: ns2-alert-bot
+spec:
+  interval: 10m0s
+  releaseName: ns2-alert-bot
+  targetNamespace: ns2-alert-bot
+  chart:
+    spec:
+      chart: ./charts/ns2-alert-bot
+      interval: 10m0s
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: ns2-alert-bot-values
+      valuesKey: values.yaml

@@ -1,0 +1,11 @@
+namespace: ns2-alert-bot
+image:
+  repository: ghcr.io/EATSTEAK/ns2-alert-bot
+  tag: main
+  pullPolicy: IfNotPresent
+imagePullSecrets:
+  - name: ghcr-auth
+config:
+  POLL_INTERVAL_SECONDS: "60"
+  STATE_DB_PATH: /data/ns2-alert-bot.sqlite3
+  HTTP_TIMEOUT_SECONDS: "15"

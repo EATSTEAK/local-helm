@@ -3,5 +3,6 @@ kind: Kustomization
 resources:
   - canvas
   - flamres
+  - ns2-alert-bot
   - pnl
   - sake

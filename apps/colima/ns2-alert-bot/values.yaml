@@ -5,6 +5,12 @@ image:
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: ghcr-auth
+container:
+  command:
+    - ns2-alert-bot
+    - --config
+    - /app/config/targets.yaml
+    - run
 config:
   POLL_INTERVAL_SECONDS: "60"
   STATE_DB_PATH: /data/ns2-alert-bot.sqlite3

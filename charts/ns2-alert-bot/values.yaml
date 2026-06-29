@@ -12,9 +12,9 @@ container:
   name: worker
   command:
     - ns2-alert-bot
-    - run
     - --config
     - /app/config/targets.yaml
+    - run
 
 configMap:
   name: ns2-alert-bot-config

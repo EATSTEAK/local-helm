@@ -1,4 +1,4 @@
-namespace: pnl
+namespace: koohyomin
 
 imagePullSecrets:
   - name: ghcr-auth

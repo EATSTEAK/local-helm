@@ -123,15 +123,14 @@ These Kubernetes Secrets are maintained outside the chart and referenced by GitO
 
 - `cloudflare-tunnel/cloudflare-tunnel-credentials`, key `credentials.json`
 - `external-dns/cloudflare-api-token`, key `api-token`
-- `default/ghcr-auth`, Docker registry credentials for `ghcr.io`
+- `koohyomin/ghcr-auth`, Docker registry credentials for `ghcr.io` used by shared in-house apps such as Canvas, NS2 Alert Bot, and PNL
+- `koohyomin/ns2-alert-bot-runtime-secrets`, runtime credentials such as `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and optional `TELEGRAM_THREAD_ID`
 - `flamres/ghcr-auth`, Docker registry credentials for `ghcr.io`
 - `flamres/flamres-secrets`
-- `ns2-alert-bot/ghcr-auth`, Docker registry credentials for `ghcr.io`
-- `ns2-alert-bot/ns2-alert-bot-runtime-secrets`, runtime credentials such as `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and optional `TELEGRAM_THREAD_ID`
 - `sake/ghcr-auth`, Docker registry credentials for `ghcr.io`
 - `sake/sake-runtime-secrets`, runtime credentials such as `SAKE_ADMIN_EMAIL`, `SAKE_ADMIN_PASSWORD`, `LLM_API_KEY`, `EMBEDDING_API_KEY`, `TAVILY_API_KEY`, and `LANGSMITH_API_KEY`
 
-The Sake chart creates `sake/sake-dev-secrets` with local-only Postgres and MinIO defaults. Do not put real external API keys in that chart-managed Secret.
+The Sake chart creates `sake/sake-dev-secrets` with local-only Postgres and MinIO defaults. The PNL dependency chart creates `koohyomin/pnl-runtime-secrets` with local-only defaults. Do not put real external API keys in chart-managed Secrets.
 
 Create or refresh the Cloudflare Secrets manually:
 
@@ -148,19 +147,13 @@ kubectl -n external-dns create secret generic cloudflare-api-token \
 Create or refresh the GHCR pull Secrets in every namespace that references them:
 
 ```sh
-kubectl -n default create secret docker-registry ghcr-auth \
+kubectl -n koohyomin create secret docker-registry ghcr-auth \
   --docker-server=ghcr.io \
   --docker-username='<github-username>' \
-  --docker-password='<github-token>' \
+  --docker-password='<github-token-with-read-packages>' \
   --dry-run=client -o yaml | kubectl apply -f -
 
 kubectl -n flamres create secret docker-registry ghcr-auth \
-  --docker-server=ghcr.io \
-  --docker-username='<github-username>' \
-  --docker-password='<github-token>' \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-kubectl -n ns2-alert-bot create secret docker-registry ghcr-auth \
   --docker-server=ghcr.io \
   --docker-username='<github-username>' \
   --docker-password='<github-token-with-read-packages>' \
@@ -189,9 +182,9 @@ kubectl -n sake create secret generic sake-runtime-secrets \
 Create or refresh NS2 alert bot runtime credentials before deploying the worker:
 
 ```sh
-kubectl create namespace ns2-alert-bot --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace koohyomin --dry-run=client -o yaml | kubectl apply -f -
 
-kubectl -n ns2-alert-bot create secret generic ns2-alert-bot-runtime-secrets \
+kubectl -n koohyomin create secret generic ns2-alert-bot-runtime-secrets \
   --from-literal=TELEGRAM_BOT_TOKEN='<telegram-bot-token>' \
   --from-literal=TELEGRAM_CHAT_ID='<telegram-chat-id-or-channel>' \
   --dry-run=client -o yaml | kubectl apply -f -

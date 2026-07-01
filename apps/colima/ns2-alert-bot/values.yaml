@@ -1,4 +1,4 @@
-namespace: ns2-alert-bot
+namespace: koohyomin
 image:
   repository: ghcr.io/eatsteak/ns2-alert-bot
   tag: main-07e83f6273f314b1bd07fd9a901fbd31b1efbdd2

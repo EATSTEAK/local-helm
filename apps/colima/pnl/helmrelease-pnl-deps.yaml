@@ -2,11 +2,11 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: pnl-deps
-  namespace: pnl
+  namespace: koohyomin
 spec:
   interval: 10m0s
   releaseName: pnl-deps
-  targetNamespace: pnl
+  targetNamespace: koohyomin
   chart:
     spec:
       chart: ./charts/pnl-deps

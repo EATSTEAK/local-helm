@@ -1,4 +1,4 @@
-namespace: default
+namespace: koohyomin
 
 image:
   repository: ghcr.io/eatsteak/canvas.koohyom.in

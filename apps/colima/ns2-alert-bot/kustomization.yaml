@@ -1,6 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: ns2-alert-bot
+namespace: koohyomin
 generatorOptions:
   disableNameSuffixHash: true
 configMapGenerator:
@@ -8,5 +8,4 @@ configMapGenerator:
     files:
       - values.yaml=values.yaml
 resources:
-  - namespace.yaml
   - helmrelease.yaml

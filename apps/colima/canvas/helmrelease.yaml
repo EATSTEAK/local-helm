@@ -2,11 +2,11 @@ apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: canvas
-  namespace: default
+  namespace: koohyomin
 spec:
   interval: 10m0s
   releaseName: canvas
-  targetNamespace: default
+  targetNamespace: koohyomin
   chart:
     spec:
       chart: ./charts/canvas

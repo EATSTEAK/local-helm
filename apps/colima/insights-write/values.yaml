@@ -1,13 +1,10 @@
 namespace: koohyomin
-
 image:
   repository: ghcr.io/eatsteak/insights-write
-  tag: latest
+  tag: main-b54f821
   pullPolicy: IfNotPresent
-
 imagePullSecrets:
   - name: ghcr-auth
-
 config:
   NODE_ENV: production
   HOST: 0.0.0.0
@@ -18,11 +15,9 @@ config:
   MLX_OMNI_MODEL: ""
   CF_WORKER_ID: ""
   CF_TARGET_BRANCH: main
-
 secretRefs:
   - name: insights-write-secrets
     optional: false
-
 ingress:
   enabled: true
   className: nginx
@@ -33,7 +28,6 @@ ingress:
   paths:
     - path: /
       pathType: Prefix
-
 persistence:
   enabled: true
   create: true

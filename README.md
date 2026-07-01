@@ -2,61 +2,34 @@
 
 Source-based Helm chart and Flux GitOps repository for local Kubernetes utilities.
 
-This repository contains `cloudflare-kube-tunnel`, a small Helm wrapper that installs Cloudflare Tunnel for an existing Kubernetes ingress controller. It also contains Flux-managed manifests for the local Colima cluster.
+This root README is an index. App-specific deployment details live in each app README under `apps/colima/*/README.md`.
 
-## Chart Usage
+## Repository index
 
-`cloudflare-kube-tunnel` does not install `ingress-nginx` or `external-dns` by default. Use it in clusters where an ingress controller already exists and where ExternalDNS is already responsible for publishing DNS records from application Ingress annotations.
+| Path | Purpose |
+| --- | --- |
+| `clusters/colima/` | Flux root for the local Colima cluster. |
+| `infrastructure/colima/` | Cluster infrastructure overlays, including HelmRepository and HelmRelease resources. |
+| `apps/colima/` | Flux-managed application overlays for the Colima cluster. |
+| `charts/` | Local source Helm charts used by Flux HelmReleases. |
+| `config/colima/` | Local Colima profile configuration. |
+| `.github/actions/dispatch-update-image-tag/` | Composite action for dispatching image tag update workflows. |
+| `.github/workflows/update-image-tag.yaml` | Workflow for updating pinned app image tags in GitOps values files. |
 
-Create the Cloudflare Tunnel credentials Secret in the release namespace before installing the chart:
+## App README index
 
-```sh
-kubectl create namespace cloudflare-tunnel --dry-run=client -o yaml | kubectl apply -f -
+| App | Namespace | Public host | README |
+| --- | --- | --- | --- |
+| Canvas | `koohyomin` | `canvas.koohyom.in` | [`apps/colima/canvas/README.md`](apps/colima/canvas/README.md) |
+| Flamres | `flamres` | Internal service only | [`apps/colima/flamres/README.md`](apps/colima/flamres/README.md) |
+| Insights Write | `koohyomin` | `write.koohyom.in` | [`apps/colima/insights-write/README.md`](apps/colima/insights-write/README.md) |
+| NS2 Alert Bot | `koohyomin` | Worker, no Ingress | [`apps/colima/ns2-alert-bot/README.md`](apps/colima/ns2-alert-bot/README.md) |
+| PNL | `koohyomin` | `pnl.koohyom.in` | [`apps/colima/pnl/README.md`](apps/colima/pnl/README.md) |
+| Sake | `sake` | `sake.koohyom.in` | [`apps/colima/sake/README.md`](apps/colima/sake/README.md) |
 
-kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-credentials \
-  --from-file=credentials.json="$HOME/.cloudflared/9b1820c5-3168-4638-a1f0-9fe1585eda94.json" \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
+## Local cluster operations
 
-Install from source:
-
-```sh
-helm dependency update ./charts/cloudflare-kube-tunnel
-helm upgrade --install cloudflare-tunnel ./charts/cloudflare-kube-tunnel \
-  --namespace cloudflare-tunnel \
-  --create-namespace \
-  -f ./charts/cloudflare-kube-tunnel/examples/values-colima.yaml
-```
-
-The chart passes values through to the upstream `cloudflare-tunnel` chart. A minimal values file looks like this:
-
-```yaml
-cloudflare-tunnel:
-  enabled: true
-  cloudflare:
-    secretName: cloudflare-tunnel-credentials
-    tunnelName: colima-k8s-koohyomin
-    tunnelId: 9b1820c5-3168-4638-a1f0-9fe1585eda94
-    ingress:
-      - hostname: "*.koohyom.in"
-        service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
-```
-
-Application Ingresses publish Cloudflare Tunnel CNAME records through ExternalDNS annotations:
-
-```yaml
-metadata:
-  annotations:
-    external-dns.alpha.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
-```
-
-## Local Cluster Management
-
-This repository includes a Colima profile config in `config/colima/values.yaml`.
-The local cluster is configured for Kubernetes with `6GiB` memory.
-
-If you have `just` installed, only cluster and Flux setup workflows are kept in `justfile`:
+The Colima profile config is kept in `config/colima/values.yaml`. If you have `just` installed, use the repository recipes for local cluster and Flux operations:
 
 ```sh
 just colima-start
@@ -65,210 +38,38 @@ just colima-status
 just colima-apply-config
 just cluster-install
 just cluster-uninstall
-```
-
-The same Colima settings can also be applied directly:
-
-```sh
-colima start --profile default --cpus 2 --memory 6 --disk 100 \
-  --runtime docker --kubernetes --kubernetes-version v1.33.4+k3s1 \
-  --k3s-arg='--disable=traefik'
-```
-
-## GitOps Operations
-
-Flux syncs the Colima cluster from `clusters/colima` on the `main` branch:
-
-```text
-clusters/colima/           # Flux root for the local cluster
-infrastructure/colima/     # HelmRepository and HelmRelease resources
-apps/colima/               # Application manifests
-```
-
-The GitOps infrastructure layer installs `ingress-nginx` and `external-dns` as separate Helm releases. The `cloudflare-tunnel` Helm release uses the local chart at `./charts/cloudflare-kube-tunnel` from the Flux GitRepository source and reconciles on Git revisions.
-
-Check Flux status:
-
-```sh
 just flux-status
-```
-
-Force Flux to fetch the latest Git revision and reconcile both layers:
-
-```sh
 just flux-reconcile
 ```
 
-Flux `Kustomization` resources use pruning, so verify each managed layer contains every resource that should remain in the cluster before removing manifests.
+Flux syncs the Colima cluster from `clusters/colima` on the `main` branch. The app layer includes every overlay listed in `apps/colima/kustomization.yaml`.
 
-If a layer needs to be paused during troubleshooting:
+## Cloudflare Tunnel chart
 
-```sh
-flux suspend kustomization apps -n flux-system
-flux resume kustomization apps -n flux-system
-```
+`charts/cloudflare-kube-tunnel` is a local wrapper around the upstream Cloudflare Tunnel chart. It expects the tunnel credential Secret to be created outside the chart and routes application Ingresses through the existing local ingress controller.
 
-For Helm-managed infrastructure:
+The Colima example values are in [`charts/cloudflare-kube-tunnel/examples/values-colima.yaml`](charts/cloudflare-kube-tunnel/examples/values-colima.yaml).
 
-```sh
-flux suspend helmrelease ingress-nginx -n ingress-nginx
-flux resume helmrelease ingress-nginx -n ingress-nginx
-```
+## Secrets and credentials
 
-## Secret Handling
+No Cloudflare API tokens, tunnel credential JSON files, Slack tokens, app credentials, registry credentials, or real external API keys should be committed.
 
-No Cloudflare API tokens, tunnel credential JSON files, Slack tokens, or app credentials are committed.
+Keep runtime Secrets outside GitOps unless a chart explicitly documents local-only defaults. App-specific Secret names and refresh commands are documented in each app README.
 
-These Kubernetes Secrets are maintained outside the chart and referenced by GitOps manifests only by name:
+Common externally managed Secrets include:
 
-- `cloudflare-tunnel/cloudflare-tunnel-credentials`, key `credentials.json`
-- `external-dns/cloudflare-api-token`, key `api-token`
-- `koohyomin/ghcr-auth`, Docker registry credentials for `ghcr.io` used by shared in-house apps such as Canvas, NS2 Alert Bot, and PNL
-- `koohyomin/ns2-alert-bot-runtime-secrets`, runtime credentials such as `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, and optional `TELEGRAM_THREAD_ID`
-- `flamres/ghcr-auth`, Docker registry credentials for `ghcr.io`
-- `flamres/flamres-secrets`
-- `sake/ghcr-auth`, Docker registry credentials for `ghcr.io`
-- `sake/sake-runtime-secrets`, runtime credentials such as `SAKE_ADMIN_EMAIL`, `SAKE_ADMIN_PASSWORD`, `LLM_API_KEY`, `EMBEDDING_API_KEY`, `TAVILY_API_KEY`, and `LANGSMITH_API_KEY`
+- Cloudflare Tunnel credentials and ExternalDNS API token
+- GHCR pull Secrets per namespace
+- Runtime Secrets for apps such as Flamres, Insights Write, NS2 Alert Bot, PNL, and Sake
 
-The Sake chart creates `sake/sake-dev-secrets` with local-only Postgres and MinIO defaults. The PNL dependency chart creates `koohyomin/pnl-runtime-secrets` with local-only defaults. Do not put real external API keys in chart-managed Secrets.
+## Image tag updates
 
-Create or refresh the Cloudflare Secrets manually:
+Private or pinned app images are updated through the **Update image tag** GitHub Actions workflow. Each app README includes the target values file and JSON path for that app.
 
-```sh
-kubectl -n cloudflare-tunnel create secret generic cloudflare-tunnel-credentials \
-  --from-file=credentials.json="$HOME/.cloudflared/9b1820c5-3168-4638-a1f0-9fe1585eda94.json" \
-  --dry-run=client -o yaml | kubectl apply -f -
+For cross-repository dispatches, use the composite action at `.github/actions/dispatch-update-image-tag` with a token that can dispatch workflows in `eatsteak/local-helm`.
 
-kubectl -n external-dns create secret generic cloudflare-api-token \
-  --from-literal=api-token='<cloudflare-api-token>' \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
+## Safety notes
 
-Create or refresh the GHCR pull Secrets in every namespace that references them:
-
-```sh
-kubectl -n koohyomin create secret docker-registry ghcr-auth \
-  --docker-server=ghcr.io \
-  --docker-username='<github-username>' \
-  --docker-password='<github-token-with-read-packages>' \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-kubectl -n flamres create secret docker-registry ghcr-auth \
-  --docker-server=ghcr.io \
-  --docker-username='<github-username>' \
-  --docker-password='<github-token-with-read-packages>' \
-  --dry-run=client -o yaml | kubectl apply -f -
-
-kubectl -n sake create secret docker-registry ghcr-auth \
-  --docker-server=ghcr.io \
-  --docker-username='<github-username>' \
-  --docker-password='<github-token-with-read-packages>' \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
-
-Create or refresh Sake runtime credentials before deploying the Sake API and worker. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account after migrations. The Colima Sake overlay currently uses the local OpenAI-compatible chat completions endpoint on `host.docker.internal:8317`, Gemini for embeddings, Tavily for agentic lead research search, and LangSmith tracing for worker research traces:
-
-```sh
-kubectl -n sake create secret generic sake-runtime-secrets \
-  --from-literal=SAKE_ADMIN_EMAIL='<master-admin-email>' \
-  --from-literal=SAKE_ADMIN_PASSWORD='<master-admin-password>' \
-  --from-literal=LLM_API_KEY='<local-llm-api-key-or-placeholder>' \
-  --from-literal=EMBEDDING_API_KEY='<gemini-api-key>' \
-  --from-literal=TAVILY_API_KEY='<tavily-api-key>' \
-  --from-literal=LANGSMITH_API_KEY='<langsmith-api-key>' \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
-
-Create or refresh NS2 alert bot runtime credentials before deploying the worker:
-
-```sh
-kubectl create namespace koohyomin --dry-run=client -o yaml | kubectl apply -f -
-
-kubectl -n koohyomin create secret generic ns2-alert-bot-runtime-secrets \
-  --from-literal=TELEGRAM_BOT_TOKEN='<telegram-bot-token>' \
-  --from-literal=TELEGRAM_CHAT_ID='<telegram-chat-id-or-channel>' \
-  --dry-run=client -o yaml | kubectl apply -f -
-```
-
-If you refresh `sake-runtime-secrets` without changing the Helm values or image tag, restart the running pods so `envFrom` picks up the new Secret data:
-
-```sh
-kubectl -n sake rollout restart deployment/sake-api deployment/sake-worker
-```
-
-Sake GHCR packages should remain private. After the `Release images` workflow pushes `ghcr.io/triflam/sake-api:main-<sha>` and `ghcr.io/triflam/sake-worker:main-<sha>`, update the pinned tags with the **Update image tag** GitHub Actions workflow.
-
-Before using the workflow, create a GitHub Environment named `image-tag-update` and configure Required reviewers. The workflow targets this environment, so the commit job waits for deployment review before it updates files and pushes back to the selected ref.
-
-For Sake, run the workflow with:
-
-```text
-app: sake
-tag: main-<sha>
-targets: [{"file":"apps/colima/sake/api-values.yaml","path":"image.tag"},{"file":"apps/colima/sake/worker-values.yaml","path":"image.tag"}]
-```
-
-For Flamres, run the workflow with:
-
-```text
-app: flamres
-tag: main-<sha>
-targets: [{"file":"apps/colima/flamres/values.yaml","path":"image.tag"}]
-```
-
-For NS2 Alert Bot, run the workflow with:
-
-```text
-app: ns2-alert-bot
-tag: main-<sha>
-targets: [{"file":"apps/colima/ns2-alert-bot/values.yaml","path":"image.tag"}]
-```
-
-To dispatch the same workflow from another GitHub Actions workflow, use the composite action. It always dispatches `eatsteak/local-helm`.
-
-Same-repository callers can use `${{ github.token }}` with `actions: write` permission. Callers from other repositories must pass a PAT or GitHub App installation token with Actions write access to `eatsteak/local-helm`.
-
-```yaml
-permissions:
-  actions: write
-
-steps:
-  - name: Dispatch Sake image tag update
-    uses: eatsteak/local-helm/.github/actions/dispatch-update-image-tag@main
-    with:
-      github-token: ${{ github.token }}
-      app: sake
-      tag: main-<sha>
-      targets: >-
-        [{"file":"apps/colima/sake/api-values.yaml","path":"image.tag"},{"file":"apps/colima/sake/worker-values.yaml","path":"image.tag"}]
-```
-
-For Flamres, use:
-
-```yaml
-steps:
-  - name: Dispatch Flamres image tag update
-    uses: eatsteak/local-helm/.github/actions/dispatch-update-image-tag@main
-    with:
-      github-token: ${{ secrets.LOCAL_HELM_ACTIONS_TOKEN }}
-      app: flamres
-      tag: main-<sha>
-      targets: >-
-        [{"file":"apps/colima/flamres/values.yaml","path":"image.tag"}]
-```
-
-For NS2 Alert Bot, use:
-
-```yaml
-steps:
-  - name: Dispatch NS2 Alert Bot image tag update
-    uses: eatsteak/local-helm/.github/actions/dispatch-update-image-tag@main
-    with:
-      github-token: ${{ secrets.LOCAL_HELM_ACTIONS_TOKEN }}
-      app: ns2-alert-bot
-      tag: main-<sha>
-      targets: >-
-        [{"file":"apps/colima/ns2-alert-bot/values.yaml","path":"image.tag"}]
-```
+Flux `Kustomization` resources use pruning. Before removing manifests or entries from an overlay, verify that every resource that should remain in the cluster is still represented elsewhere.
 
 Do not commit rendered Secrets, Cloudflare API tokens, tunnel credential JSON files, registry credentials, or real external API keys.

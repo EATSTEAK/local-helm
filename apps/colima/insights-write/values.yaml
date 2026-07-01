@@ -1,0 +1,46 @@
+namespace: koohyomin
+
+image:
+  repository: ghcr.io/eatsteak/insights-write
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ghcr-auth
+
+config:
+  NODE_ENV: production
+  HOST: 0.0.0.0
+  PORT: "4321"
+  LLM_SERVERS_FILE: /app/data/llm-servers.json
+  R2_BUCKET_NAME: insights-content
+  MLX_OMNI_BASE_URL: http://host.docker.internal:10240/v1
+  MLX_OMNI_MODEL: ""
+  CF_WORKER_ID: ""
+  CF_TARGET_BRANCH: main
+
+secretRefs:
+  - name: insights-write-secrets
+    optional: false
+
+ingress:
+  enabled: true
+  className: nginx
+  host: write.koohyom.in
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.alpha.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
+  paths:
+    - path: /
+      pathType: Prefix
+
+persistence:
+  enabled: true
+  create: true
+  name: insights-write-data
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  volumeMode: Filesystem
+  mountPath: /app/data

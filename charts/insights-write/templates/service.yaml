@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "insights-write.fullname" . }}
+  namespace: {{ include "insights-write.namespace" . }}
+  labels:
+    {{- include "insights-write.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
+  selector:
+    {{- include "insights-write.selectorLabels" . | nindent 4 }}

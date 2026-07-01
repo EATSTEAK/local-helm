@@ -1,0 +1,94 @@
+nameOverride: ""
+fullnameOverride: ""
+namespace: koohyomin
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/eatsteak/insights-write
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+container:
+  port: 4321
+
+configMap:
+  name: insights-write-config
+
+config:
+  NODE_ENV: production
+  HOST: 0.0.0.0
+  PORT: "4321"
+  LLM_SERVERS_FILE: /app/data/llm-servers.json
+  R2_BUCKET_NAME: insights-content
+  MLX_OMNI_BASE_URL: http://host.docker.internal:10240/v1
+  MLX_OMNI_MODEL: ""
+  CF_WORKER_ID: ""
+  CF_TARGET_BRANCH: main
+
+secretRefs:
+  - name: insights-write-secrets
+    optional: false
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: http
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+ingress:
+  enabled: false
+  className: nginx
+  host: ""
+  annotations: {}
+  paths:
+    - path: /
+      pathType: Prefix
+
+persistence:
+  enabled: true
+  create: true
+  name: insights-write-data
+  annotations:
+    helm.sh/resource-policy: keep
+  storageClassName: local-path
+  accessModes:
+    - ReadWriteOnce
+  size: 1Gi
+  volumeMode: Filesystem
+  mountPath: /app/data
+
+probes:
+  liveness:
+    path: /api/health
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readiness:
+    path: /api/health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3

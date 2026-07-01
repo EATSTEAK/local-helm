@@ -2,7 +2,7 @@ namespace: ""
 replicaCount: 1
 
 image:
-  repository: ghcr.io/triflam/sake-app
+  repository: ghcr.io/triflam/sake-api
   tag: ""
   pullPolicy: IfNotPresent
 

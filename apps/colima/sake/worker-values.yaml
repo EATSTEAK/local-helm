@@ -1,6 +1,6 @@
 namespace: sake
 image:
-  repository: ghcr.io/triflam/sake-app
+  repository: ghcr.io/triflam/sake-worker
   tag: main-07bff7d
   pullPolicy: IfNotPresent
 imagePullSecrets:

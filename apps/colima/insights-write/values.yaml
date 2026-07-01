@@ -1,7 +1,7 @@
 namespace: koohyomin
 image:
   repository: ghcr.io/eatsteak/insights-write
-  tag: main-8296586
+  tag: main-d8a0038
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: ghcr-auth

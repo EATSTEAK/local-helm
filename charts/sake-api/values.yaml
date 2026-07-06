@@ -11,7 +11,7 @@ imagePullSecrets: []
 container:
   command:
     - node
-    - apps/api/dist/main.js
+    - server/api/dist/main.js
   port: 3000
 
 configMap:

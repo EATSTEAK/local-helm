@@ -45,5 +45,5 @@ spec:
               test -n "$DATABASE_URL"
               test -n "$SAKE_ADMIN_EMAIL"
               test -n "$SAKE_ADMIN_PASSWORD"
-              node apps/api/dist/auth/seed-master-account.js
+              node server/api/dist/auth/seed-master-account.js
 {{- end }}

@@ -1,7 +1,7 @@
 namespace: sake
 image:
   repository: ghcr.io/triflam/sake-worker
-  tag: main-72cd915
+  tag: main-b9e4419
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: ghcr-auth

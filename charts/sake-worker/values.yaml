@@ -11,7 +11,7 @@ imagePullSecrets: []
 container:
   command:
     - node
-    - apps/worker/dist/main.js
+    - server/worker/dist/main.js
 
 configMap:
   name: sake-worker-config

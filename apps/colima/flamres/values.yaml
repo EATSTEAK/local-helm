@@ -20,7 +20,7 @@ config:
   NOTION_CALENDAR_SYNC_MIN_INTERVAL_MINUTES: "5"
   NOTION_CALENDAR_SYNC_STORE_PATH: /home/node/.local/share/triflam-bot/notion-calendar-sync.json
   OPENCODE_BUNDLED_CONFIG_DIR: /app/.opencode
-  OPENCODE_MODEL: triflam-local/gpt-5.5
+  OPENCODE_MODEL: triflam-local/glm-5.2
   OPENCODE_PROVIDER_BASE_URL: http://host.docker.internal:8317/v1
   OPENCODE_SERVER_PORT: "4097"
   OPENCODE_WORKDIR: /workspace

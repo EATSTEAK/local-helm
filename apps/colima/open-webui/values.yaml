@@ -1,0 +1,123 @@
+ollama:
+  enabled: false
+
+pipelines:
+  enabled: false
+
+tika:
+  enabled: false
+
+terminals:
+  enabled: false
+
+websocket:
+  manager: ""
+  redis:
+    enabled: false
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 512Mi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /health/db
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 10
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 5
+  failureThreshold: 24
+
+service:
+  type: ClusterIP
+  port: 80
+  containerPort: 8080
+
+ingress:
+  enabled: true
+  class: nginx
+  host: owu.koohyom.in
+  tls: false
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.alpha.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+
+persistence:
+  enabled: true
+  size: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClass: local-path
+  provider: local
+  annotations:
+    helm.sh/resource-policy: keep
+
+# Model backends will be configured later from the Open WebUI admin UI.
+enableOpenaiApi: false
+openaiApiKey: ""
+
+extraEnvVars:
+  - name: WEBUI_URL
+    value: https://owu.koohyom.in
+  - name: ENABLE_SIGNUP
+    value: "false"
+  - name: DEFAULT_USER_ROLE
+    value: pending
+  - name: WEBUI_SESSION_COOKIE_SECURE
+    value: "true"
+  - name: WEBUI_SESSION_COOKIE_SAME_SITE
+    value: strict
+  - name: CORS_ALLOW_ORIGIN
+    value: https://owu.koohyom.in
+  - name: ENABLE_OPENAI_API_PASSTHROUGH
+    value: "false"
+  - name: JWT_EXPIRES_IN
+    value: 7d
+  - name: RAG_FILE_MAX_SIZE
+    value: "50"
+  - name: RAG_FILE_MAX_COUNT
+    value: "10"
+  - name: RAG_ALLOWED_FILE_EXTENSIONS
+    value: .pdf,.txt,.md,.docx,.csv
+  - name: WEBUI_ADMIN_EMAIL
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-bootstrap
+        key: WEBUI_ADMIN_EMAIL
+  - name: WEBUI_ADMIN_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-bootstrap
+        key: WEBUI_ADMIN_PASSWORD
+  - name: WEBUI_ADMIN_NAME
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-bootstrap
+        key: WEBUI_ADMIN_NAME
+  - name: WEBUI_SECRET_KEY
+    valueFrom:
+      secretKeyRef:
+        name: open-webui-bootstrap
+        key: WEBUI_SECRET_KEY

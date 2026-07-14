@@ -15,3 +15,12 @@ metadata:
 spec:
   interval: 10m0s
   url: https://kubernetes-sigs.github.io/external-dns/
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: open-webui
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  url: https://helm.openwebui.com

@@ -24,6 +24,7 @@ This root README is an index. App-specific deployment details live in each app R
 | Flamres | `flamres` | Internal service only | [`apps/colima/flamres/README.md`](apps/colima/flamres/README.md) |
 | Insights Write | `koohyomin` | `write.koohyom.in` | [`apps/colima/insights-write/README.md`](apps/colima/insights-write/README.md) |
 | NS2 Alert Bot | `koohyomin` | Worker, no Ingress | [`apps/colima/ns2-alert-bot/README.md`](apps/colima/ns2-alert-bot/README.md) |
+| Open WebUI | `open-webui` | `owu.koohyom.in` | [`apps/colima/open-webui/README.md`](apps/colima/open-webui/README.md) |
 | PNL | `koohyomin` | `pnl.koohyom.in` | [`apps/colima/pnl/README.md`](apps/colima/pnl/README.md) |
 | Sake | `sake` | `sake.koohyom.in` | [`apps/colima/sake/README.md`](apps/colima/sake/README.md) |
 

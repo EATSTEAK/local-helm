@@ -8,7 +8,7 @@ imagePullSecrets:
 configMap:
   name: flamres-config
 config:
-  CANVAS_PUBLISH_URL: http://canvas.default.svc.cluster.local/api/v1/publish
+  CANVAS_PUBLISH_URL: http://canvas.koohyomin.svc.cluster.local/api/v1/publish
   LOG_LEVEL: info
   MCP_LINEAR_ENABLED: "true"
   MCP_LINEAR_URL: https://mcp.linear.app/mcp

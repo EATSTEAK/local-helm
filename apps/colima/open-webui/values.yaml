@@ -1,3 +1,6 @@
+image:
+  tag: v0.11.0
+
 ollama:
   enabled: false
 
@@ -59,7 +62,8 @@ ingress:
   tls: false
   annotations:
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
-    external-dns.alpha.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
+    external-dns.alpha.kubernetes.io/target: >-
+      9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
     nginx.ingress.kubernetes.io/proxy-body-size: "50m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"

@@ -58,7 +58,7 @@ service:
 ingress:
   enabled: true
   class: nginx
-  host: owu.koohyom.in
+  host: chat.koohyom.in
   tls: false
   annotations:
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
@@ -84,7 +84,7 @@ openaiApiKey: ""
 
 extraEnvVars:
   - name: WEBUI_URL
-    value: https://owu.koohyom.in
+    value: https://chat.koohyom.in
   - name: ENABLE_SIGNUP
     value: "false"
   - name: DEFAULT_USER_ROLE
@@ -94,7 +94,7 @@ extraEnvVars:
   - name: WEBUI_SESSION_COOKIE_SAME_SITE
     value: strict
   - name: CORS_ALLOW_ORIGIN
-    value: https://owu.koohyom.in
+    value: https://chat.koohyom.in
   - name: ENABLE_OPENAI_API_PASSTHROUGH
     value: "false"
   - name: JWT_EXPIRES_IN

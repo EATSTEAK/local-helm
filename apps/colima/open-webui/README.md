@@ -6,7 +6,7 @@ Open WebUI is deployed to the local Colima cluster with the upstream `open-webui
 | --- | --- |
 | Namespace | `open-webui` |
 | Release | `open-webui` |
-| Public host | `owu.koohyom.in` |
+| Public host | `chat.koohyom.in` |
 | Chart | `open-webui` from `https://helm.openwebui.com` |
 | Data | chart-managed `local-path` PVC `open-webui` |
 
@@ -61,7 +61,7 @@ The final command copies the generated admin password to the macOS clipboard wit
 ```sh
 kubectl get helmrelease -n open-webui open-webui
 kubectl get pods,svc,pvc,ingress -n open-webui
-curl -I https://owu.koohyom.in/
+curl -I https://chat.koohyom.in/
 ```
 
 The app is intentionally deployed without in-cluster Ollama or Pipelines. Configure model providers later from the Open WebUI admin UI or by adding Secret-backed values.

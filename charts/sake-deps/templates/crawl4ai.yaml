@@ -24,8 +24,15 @@ spec:
     spec:
       containers:
         - name: crawl4ai
-          image: "{{ .Values.crawl4ai.image.repository }}:{{ .Values.crawl4ai.image.tag }}"
+          image: "{{ .Values.crawl4ai.image.repository }}:{{ .Values.crawl4ai.image.tag }}{{ with .Values.crawl4ai.image.digest }}@{{ . }}{{ end }}"
           imagePullPolicy: {{ .Values.crawl4ai.image.pullPolicy }}
+          env:
+            - name: CRAWL4AI_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "crawl4ai.auth.secretName is required" .Values.crawl4ai.auth.secretName }}
+                  key: {{ required "crawl4ai.auth.secretKey is required" .Values.crawl4ai.auth.secretKey }}
+                  optional: false
           ports:
             - name: http
               containerPort: {{ .Values.crawl4ai.service.port }}

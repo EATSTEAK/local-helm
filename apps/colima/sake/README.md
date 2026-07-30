@@ -34,7 +34,7 @@ The API chart runs Prisma migration and master account seed jobs as Helm hooks. 
 - PostgreSQL with pgvector: `pgvector/pgvector:pg16`, PVC `sake-postgres-data`, `8Gi`
 - Redis: `redis:7-alpine`
 - MinIO: `minio/minio:RELEASE.2025-09-07T16-13-09Z`, bucket `sake-dev`, PVC `sake-minio-data`, `10Gi`
-- Crawl4AI: `unclecode/crawl4ai:basic`
+- Crawl4AI: `unclecode/crawl4ai:0.9.2` pinned by digest
 - Secret: `sake-dev-secrets` with local-only Postgres and MinIO defaults
 
 Do not put real external API keys in chart-managed Secrets.
@@ -55,7 +55,9 @@ kubectl -n sake create secret docker-registry ghcr-auth \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-Create or refresh `sake-runtime-secrets` before deploying API and worker. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account, and the other keys back local LLM, embedding, Tavily, and LangSmith integrations:
+Create or refresh `sake-runtime-secrets` before deploying dependencies, API, and worker. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account; the remaining keys back local LLM, embedding, Tavily, LangSmith, and Crawl4AI integrations.
+
+Crawl4AI 0.9.2 intentionally binds only to loopback when no API token is configured, so a Kubernetes `ClusterIP` alone cannot bypass authentication. The same random token must be mounted into Crawl4AI and the Sake worker. The dependency chart also limits Crawl4AI ingress to worker pods and egress to public HTTP/HTTPS plus cluster DNS; this requires the cluster CNI to enforce `NetworkPolicy`:
 
 ```sh
 kubectl -n sake create secret generic sake-runtime-secrets \
@@ -65,13 +67,14 @@ kubectl -n sake create secret generic sake-runtime-secrets \
   --from-literal=EMBEDDING_API_KEY='<gemini-api-key>' \
   --from-literal=TAVILY_API_KEY='<tavily-api-key>' \
   --from-literal=LANGSMITH_API_KEY='<langsmith-api-key>' \
+  --from-literal=CRAWL4AI_API_TOKEN="$(openssl rand -hex 32)" \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 If only Secret data changes, restart running pods so `envFrom` picks up the new values:
 
 ```sh
-kubectl -n sake rollout restart deployment/sake-api deployment/sake-worker
+kubectl -n sake rollout restart deployment/sake-crawl4ai deployment/sake-api deployment/sake-worker
 ```
 
 ## Image tag updates

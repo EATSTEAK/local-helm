@@ -34,6 +34,13 @@ config:
 secretRef:
   enabled: true
   name: flamres-secrets
+resources:
+  limits:
+    cpu: "1"
+    memory: 2Gi
+  requests:
+    cpu: 100m
+    memory: 256Mi
 persistence:
   opencodeData:
     enabled: true

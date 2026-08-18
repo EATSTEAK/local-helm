@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grimmory
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: grimmory, app.kubernetes.io/component: app}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: grimmory, app.kubernetes.io/component: app}
+    spec:
+      securityContext: {fsGroup: 1000}
+      containers:
+        - name: grimmory
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          envFrom: [{configMapRef: {name: grimmory-config}}]
+          env:
+            - name: DATABASE_PASSWORD
+              valueFrom: {secretKeyRef: {name: {{ .Values.database.secretName }}, key: {{ .Values.database.passwordKey }}}}
+          ports: [{name: http, containerPort: {{ .Values.service.port }}}]
+          startupProbe: {httpGet: {path: /api/v1/healthcheck, port: http}, failureThreshold: 30, periodSeconds: 10}
+          readinessProbe: {httpGet: {path: /api/v1/healthcheck, port: http}, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /api/v1/healthcheck, port: http}, periodSeconds: 30}
+          resources: {{- toYaml .Values.resources.app | nindent 12 }}
+          volumeMounts:
+            - {name: app-data, mountPath: /app/data}
+            - {name: books, mountPath: /books}
+            - {name: bookdrop, mountPath: /bookdrop}
+      volumes:
+        - {name: app-data, persistentVolumeClaim: {claimName: grimmory-appdata}}
+        - {name: books, persistentVolumeClaim: {claimName: grimmory-books}}
+        - {name: bookdrop, persistentVolumeClaim: {claimName: grimmory-bookdrop}}

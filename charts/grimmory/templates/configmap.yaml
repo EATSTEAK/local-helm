@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grimmory-config
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+data:
+  USER_ID: "1000"
+  GROUP_ID: "1000"
+  TZ: {{ .Values.timezone | quote }}
+  DATABASE_URL: {{ printf "jdbc:mariadb://%s:3306/%s" .Values.database.host .Values.database.name | quote }}
+  DATABASE_USERNAME: {{ .Values.database.username | quote }}
+  DISK_TYPE: LOCAL
+  SWAGGER_ENABLED: "false"
+  API_DOCS_ENABLED: "false"

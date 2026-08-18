@@ -1,0 +1,20 @@
+namespace: default
+image: {repository: ghcr.io/grimmory-tools/grimmory, tag: v3.2.4, pullPolicy: IfNotPresent}
+timezone: UTC
+database:
+  host: grimmory-mariadb
+  name: grimmory
+  username: grimmory
+  secretName: grimmory-db
+  passwordKey: database-password
+  rootPasswordKey: root-password
+  image: {repository: lscr.io/linuxserver/mariadb, tag: 11.4.8, pullPolicy: IfNotPresent}
+service: {port: 6060}
+ingress: {enabled: false, className: nginx, host: "", annotations: {}}
+resources: {app: {}, mariadb: {}}
+persistence:
+  storageClassName: local-path
+  appData: {size: 2Gi}
+  books: {size: 30Gi}
+  bookdrop: {size: 5Gi}
+  mariadb: {size: 5Gi}

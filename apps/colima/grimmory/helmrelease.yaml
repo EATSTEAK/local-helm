@@ -1,0 +1,22 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: grimmory
+  namespace: default
+spec:
+  interval: 10m0s
+  releaseName: grimmory
+  targetNamespace: default
+  chart:
+    spec:
+      chart: ./charts/grimmory
+      interval: 10m0s
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: grimmory-values
+      valuesKey: values.yaml

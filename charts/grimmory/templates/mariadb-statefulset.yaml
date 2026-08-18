@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: grimmory-mariadb
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+spec:
+  serviceName: {{ .Values.database.host }}
+  replicas: 1
+  selector:
+    matchLabels: {app.kubernetes.io/name: grimmory, app.kubernetes.io/component: mariadb}
+  template:
+    metadata:
+      labels: {app.kubernetes.io/name: grimmory, app.kubernetes.io/component: mariadb}
+    spec:
+      securityContext: {fsGroup: 1000}
+      containers:
+        - name: mariadb
+          image: "{{ .Values.database.image.repository }}:{{ .Values.database.image.tag }}"
+          imagePullPolicy: {{ .Values.database.image.pullPolicy }}
+          env:
+            - {name: PUID, value: "1000"}
+            - {name: PGID, value: "1000"}
+            - {name: TZ, value: {{ .Values.timezone | quote }}}
+            - {name: MYSQL_DATABASE, value: {{ .Values.database.name | quote }}}
+            - {name: MYSQL_USER, value: {{ .Values.database.username | quote }}}
+            - name: MYSQL_PASSWORD
+              valueFrom: {secretKeyRef: {name: {{ .Values.database.secretName }}, key: {{ .Values.database.passwordKey }}}}
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom: {secretKeyRef: {name: {{ .Values.database.secretName }}, key: {{ .Values.database.rootPasswordKey }}}}
+          ports: [{name: mysql, containerPort: 3306}]
+          startupProbe: {exec: {command: [mariadb-admin, ping, -h, localhost]}, failureThreshold: 30, periodSeconds: 10}
+          readinessProbe: {exec: {command: [mariadb-admin, ping, -h, localhost]}, periodSeconds: 10}
+          livenessProbe: {exec: {command: [mariadb-admin, ping, -h, localhost]}, periodSeconds: 30}
+          resources: {{- toYaml .Values.resources.mariadb | nindent 12 }}
+          volumeMounts: [{name: data, mountPath: /config}]
+      volumes: [{name: data, persistentVolumeClaim: {claimName: grimmory-mariadb}}]

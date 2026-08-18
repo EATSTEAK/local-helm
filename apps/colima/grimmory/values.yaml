@@ -1,0 +1,42 @@
+namespace: default
+image:
+  repository: ghcr.io/grimmory-tools/grimmory
+  tag: v3.2.4
+  pullPolicy: IfNotPresent
+timezone: Asia/Seoul
+database:
+  host: grimmory-mariadb
+  name: grimmory
+  username: grimmory
+  secretName: grimmory-db
+  passwordKey: database-password
+  rootPasswordKey: root-password
+  image:
+    repository: lscr.io/linuxserver/mariadb
+    tag: 11.4.8
+    pullPolicy: IfNotPresent
+service:
+  port: 6060
+ingress:
+  enabled: true
+  className: nginx
+  host: books.koohyom.in
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    external-dns.alpha.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com
+    nginx.ingress.kubernetes.io/proxy-body-size: "2g"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+resources:
+  app:
+    requests: {cpu: 200m, memory: 512Mi}
+    limits: {cpu: "1", memory: 1Gi}
+  mariadb:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {cpu: 500m, memory: 512Mi}
+persistence:
+  storageClassName: local-path
+  appData: {size: 2Gi}
+  books: {size: 30Gi}
+  bookdrop: {size: 5Gi}
+  mariadb: {size: 5Gi}

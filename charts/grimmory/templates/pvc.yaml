@@ -1,0 +1,17 @@
+{{- $namespace := .Values.namespace | default .Release.Namespace }}
+{{- range $name, $config := .Values.persistence }}
+{{- if ne $name "storageClassName" }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grimmory-{{ $name | lower }}
+  namespace: {{ $namespace }}
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: {{ $.Values.persistence.storageClassName }}
+  resources:
+    requests:
+      storage: {{ $config.size }}
+{{- end }}
+{{- end }}

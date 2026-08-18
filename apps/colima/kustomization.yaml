@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - canvas
   - flamres
+  - grimmory
   - insights-write
   - ns2-alert-bot
   - open-webui

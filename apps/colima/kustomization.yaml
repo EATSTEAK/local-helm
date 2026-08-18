@@ -6,5 +6,4 @@ resources:
   - insights-write
   - ns2-alert-bot
   - open-webui
-  - pnl
   - sake

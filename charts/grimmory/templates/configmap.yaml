@@ -12,3 +12,4 @@ data:
   DISK_TYPE: LOCAL
   SWAGGER_ENABLED: "false"
   API_DOCS_ENABLED: "false"
+  ALLOWED_ORIGINS: {{ printf "https://%s" .Values.ingress.host | quote }}

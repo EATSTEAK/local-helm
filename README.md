@@ -22,6 +22,7 @@ This root README is an index. App-specific deployment details live in each app R
 | --- | --- | --- | --- |
 | Canvas | `koohyomin` | `canvas.koohyom.in` | [`apps/colima/canvas/README.md`](apps/colima/canvas/README.md) |
 | Flamres | `flamres` | Internal service only | [`apps/colima/flamres/README.md`](apps/colima/flamres/README.md) |
+| Grimmory | `default` | `books.koohyom.in` | [`apps/colima/grimmory/README.md`](apps/colima/grimmory/README.md) |
 | Insights Write | `koohyomin` | `write.koohyom.in` | [`apps/colima/insights-write/README.md`](apps/colima/insights-write/README.md) |
 | NS2 Alert Bot | `koohyomin` | Worker, no Ingress | [`apps/colima/ns2-alert-bot/README.md`](apps/colima/ns2-alert-bot/README.md) |
 | Open WebUI | `open-webui` | `chat.koohyom.in` | [`apps/colima/open-webui/README.md`](apps/colima/open-webui/README.md) |

@@ -11,7 +11,12 @@ spec:
     metadata:
       labels: {app.kubernetes.io/name: grimmory, app.kubernetes.io/component: app}
     spec:
-      securityContext: {fsGroup: 1000}
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: {{ if .Values.translationSidecar.enabled }}{{ .Values.translationSidecar.terminationGracePeriodSeconds }}{{ else }}30{{ end }}
+      securityContext: {fsGroup: 1000, fsGroupChangePolicy: OnRootMismatch}
+      {{- if and .Values.translationSidecar.enabled .Values.translationSidecar.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml .Values.translationSidecar.imagePullSecrets | nindent 8 }}
+      {{- end }}
       containers:
         - name: grimmory
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -29,7 +34,61 @@ spec:
             - {name: app-data, mountPath: /app/data}
             - {name: books, mountPath: /books}
             - {name: bookdrop, mountPath: /bookdrop}
+        {{- if .Values.translationSidecar.enabled }}
+        - name: translation-sidecar
+          image: "{{ .Values.translationSidecar.image.repository }}:{{ .Values.translationSidecar.image.tag }}"
+          imagePullPolicy: {{ .Values.translationSidecar.image.pullPolicy }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: ["ALL"]}
+            seccompProfile: {type: RuntimeDefault}
+          env:
+            - name: BBM_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.translationSidecar.secretName }}
+                  key: {{ .Values.translationSidecar.secretKey }}
+            - {name: INPUT_DIR, value: {{ .Values.translationSidecar.config.inputDir | quote }}}
+            - {name: OUTPUT_DIR, value: {{ .Values.translationSidecar.config.outputDir | quote }}}
+            - {name: STATE_DIR, value: {{ .Values.translationSidecar.config.stateDir | quote }}}
+            - {name: LLM_BASE_URL, value: {{ .Values.translationSidecar.config.llmBaseUrl | quote }}}
+            - {name: LLM_MODEL, value: {{ .Values.translationSidecar.config.llmModel | quote }}}
+            - {name: TARGET_LANGUAGE, value: {{ .Values.translationSidecar.config.targetLanguage | quote }}}
+            - {name: SINGLE_TRANSLATE, value: {{ .Values.translationSidecar.config.singleTranslate | quote }}}
+            - {name: PLAN_CLASSIFY, value: {{ .Values.translationSidecar.config.planClassify | quote }}}
+            - {name: TRANSLATE_TAGS, value: {{ .Values.translationSidecar.config.translateTags | quote }}}
+            - {name: EXCLUDE_TRANSLATE_TAGS, value: {{ .Values.translationSidecar.config.excludeTranslateTags | quote }}}
+            - {name: USE_CONTEXT, value: {{ .Values.translationSidecar.config.useContext | quote }}}
+            - {name: TEMPERATURE, value: {{ .Values.translationSidecar.config.temperature | quote }}}
+            - {name: PARALLEL_WORKERS, value: {{ .Values.translationSidecar.config.parallelWorkers | quote }}}
+            - {name: PROMPT, value: {{ .Values.translationSidecar.config.prompt | quote }}}
+            - {name: EXTRA_BODY, value: {{ .Values.translationSidecar.config.extraBody | quote }}}
+            - {name: POLL_INTERVAL_SECONDS, value: {{ .Values.translationSidecar.config.pollIntervalSeconds | quote }}}
+            - {name: STABLE_AGE_SECONDS, value: {{ .Values.translationSidecar.config.stableAgeSeconds | quote }}}
+            - {name: JOB_TIMEOUT_SECONDS, value: {{ .Values.translationSidecar.config.jobTimeoutSeconds | quote }}}
+            - {name: MAX_ATTEMPTS, value: {{ .Values.translationSidecar.config.maxAttempts | quote }}}
+            - {name: RETRY_BASE_SECONDS, value: {{ .Values.translationSidecar.config.retryBaseSeconds | quote }}}
+            - {name: RETRY_MAX_SECONDS, value: {{ .Values.translationSidecar.config.retryMaxSeconds | quote }}}
+            - {name: HEALTH_PORT, value: {{ .Values.translationSidecar.config.healthPort | quote }}}
+            - {name: LOG_LEVEL, value: {{ .Values.translationSidecar.config.logLevel | quote }}}
+          ports:
+            - {name: translator-health, containerPort: {{ .Values.translationSidecar.config.healthPort }}}
+          startupProbe: {httpGet: {path: /healthz, port: translator-health}, failureThreshold: 30, periodSeconds: 2}
+          readinessProbe: {httpGet: {path: /readyz, port: translator-health}, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /healthz, port: translator-health}, periodSeconds: 30}
+          resources: {{- toYaml .Values.translationSidecar.resources | nindent 12 }}
+          volumeMounts:
+            - {name: books, mountPath: /books}
+            - {name: translator-tmp, mountPath: /tmp}
+        {{- end }}
       volumes:
         - {name: app-data, persistentVolumeClaim: {claimName: grimmory-appdata}}
         - {name: books, persistentVolumeClaim: {claimName: grimmory-books}}
         - {name: bookdrop, persistentVolumeClaim: {claimName: grimmory-bookdrop}}
+        {{- if .Values.translationSidecar.enabled }}
+        - {name: translator-tmp, emptyDir: {}}
+        {{- end }}

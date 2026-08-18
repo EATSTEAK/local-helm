@@ -40,3 +40,40 @@ persistence:
   books: {size: 30Gi}
   bookdrop: {size: 5Gi}
   mariadb: {size: 5Gi}
+translationSidecar:
+  enabled: true
+  image:
+    repository: grimmory-translation-sidecar
+    tag: dev
+    pullPolicy: Never
+  imagePullSecrets: []
+  secretName: grimmory-translator-runtime
+  secretKey: LLM_API_KEY
+  terminationGracePeriodSeconds: 60
+  config:
+    inputDir: /books/translations-original
+    outputDir: /books/epub_kr
+    stateDir: /books/.translation-sidecar
+    llmBaseUrl: http://host.docker.internal:8317/v1
+    llmModel: gpt-5.6-luna
+    targetLanguage: ko
+    singleTranslate: true
+    planClassify: most
+    translateTags: ""
+    excludeTranslateTags: sup,code
+    useContext: false
+    temperature: ""
+    parallelWorkers: 1
+    prompt: ""
+    extraBody: ""
+    pollIntervalSeconds: 10
+    stableAgeSeconds: 30
+    jobTimeoutSeconds: 86400
+    maxAttempts: 5
+    retryBaseSeconds: 300
+    retryMaxSeconds: 3600
+    healthPort: 8081
+    logLevel: INFO
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {cpu: "1", memory: 1Gi}

@@ -15,11 +15,11 @@ kubectl -n default get pods,pvc,ingress
 
 The optional `translation-sidecar` watches `/books/translations-original` for stable EPUB files, translates them with `yihong0618/bilingual_book_maker`, and atomically publishes Korean EPUB files with the same relative path under `/books/epub_kr`. Job state and resumable checkpoints live in `/books/.translation-sidecar` on the books PVC.
 
-The sidecar defaults to the OpenAI-compatible endpoint at `http://host.docker.internal:8317/v1` and model `gpt-5.6-luna`. Every translation and polling option can be overridden under `translationSidecar.config` in [`values.yaml`](values.yaml). The API key is intentionally kept out of Git. The Colima overlay uses the locally built `grimmory-translation-sidecar:dev` image with `pullPolicy: Never`.
+The sidecar defaults to the OpenAI-compatible endpoint at `http://host.docker.internal:8317/v1` and model `gpt-5.6-luna`. Every translation and polling option can be overridden under `translationSidecar.config` in [`values.yaml`](values.yaml). The API key is intentionally kept out of Git. The Colima overlay pulls the private, versioned image from GHCR with the existing `default/ghcr-auth` pull Secret.
 
 To reproduce the deployment on a fresh Colima VM:
 
-1. Build `grimmory-translation-sidecar:dev` from the sidecar source repository using the Colima Docker context. Alternatively, publish it and change the image repository, tag, and pull policy.
+1. Ensure the `ghcr-auth` image pull Secret exists in the `default` namespace.
 2. Create the runtime Secret:
 
    ```sh
@@ -39,3 +39,20 @@ curl --fail http://127.0.0.1:18081/readyz
 ```
 
 Only upload works that are public domain or that you are authorized to translate.
+
+## Translation status
+
+Follow reconciliation summaries in the sidecar logs:
+
+```sh
+kubectl -n default logs deployment/grimmory -c translation-sidecar -f
+```
+
+Each completed scan reports `translated`, `failed`, `skipped`, and `locked`. Inspect the per-book SQLite job ledger for the most recent jobs and errors:
+
+```sh
+kubectl -n default exec deployment/grimmory -c translation-sidecar -- \
+  /app/.venv/bin/python -c 'import sqlite3; db=sqlite3.connect("/books/.translation-sidecar/state.sqlite3"); [print(*row, sep="\t") for row in db.execute("SELECT relative_path,status,attempt_count,last_error,updated_at FROM jobs ORDER BY updated_at DESC LIMIT 20")]'
+```
+
+`running` means a book is being processed, `done` means it was atomically published under `/books/epub_kr`, and `failed` includes the last error and is retried according to the configured backoff. The current worker exposes book-level state, not a chapter percentage.

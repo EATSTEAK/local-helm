@@ -43,10 +43,11 @@ persistence:
 translationSidecar:
   enabled: true
   image:
-    repository: grimmory-translation-sidecar
-    tag: dev
-    pullPolicy: Never
-  imagePullSecrets: []
+    repository: ghcr.io/eatsteak/grimmory-translation-sidecar
+    tag: 0.1.0
+    pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: ghcr-auth
   secretName: grimmory-translator-runtime
   secretKey: LLM_API_KEY
   terminationGracePeriodSeconds: 60

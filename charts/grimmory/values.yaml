@@ -22,7 +22,7 @@ translationSidecar:
   enabled: false
   image:
     repository: ghcr.io/eatsteak/grimmory-translation-sidecar
-    tag: main
+    tag: 0.1.0
     pullPolicy: IfNotPresent
   imagePullSecrets: []
   secretName: grimmory-translator-runtime

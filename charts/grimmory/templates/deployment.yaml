@@ -76,10 +76,10 @@ spec:
             - {name: HEALTH_PORT, value: {{ .Values.translationSidecar.config.healthPort | quote }}}
             - {name: LOG_LEVEL, value: {{ .Values.translationSidecar.config.logLevel | quote }}}
           ports:
-            - {name: translator-health, containerPort: {{ .Values.translationSidecar.config.healthPort }}}
-          startupProbe: {httpGet: {path: /healthz, port: translator-health}, failureThreshold: 30, periodSeconds: 2}
-          readinessProbe: {httpGet: {path: /readyz, port: translator-health}, periodSeconds: 10}
-          livenessProbe: {httpGet: {path: /healthz, port: translator-health}, periodSeconds: 30}
+            - {name: sidecar-http, containerPort: {{ .Values.translationSidecar.config.healthPort }}}
+          startupProbe: {httpGet: {path: /healthz, port: sidecar-http}, failureThreshold: 30, periodSeconds: 2}
+          readinessProbe: {httpGet: {path: /readyz, port: sidecar-http}, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /healthz, port: sidecar-http}, periodSeconds: 30}
           resources: {{- toYaml .Values.translationSidecar.resources | nindent 12 }}
           volumeMounts:
             - {name: books, mountPath: /books}

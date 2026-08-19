@@ -44,7 +44,7 @@ translationSidecar:
   enabled: true
   image:
     repository: ghcr.io/eatsteak/grimmory-translation-sidecar
-    tag: 0.2.0
+    tag: main-7da1c3a
     pullPolicy: IfNotPresent
   imagePullSecrets:
     - name: ghcr-auth

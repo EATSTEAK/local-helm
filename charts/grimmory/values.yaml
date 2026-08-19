@@ -22,7 +22,7 @@ translationSidecar:
   enabled: false
   image:
     repository: ghcr.io/eatsteak/grimmory-translation-sidecar
-    tag: 0.1.0
+    tag: 0.2.0
     pullPolicy: IfNotPresent
   imagePullSecrets: []
   secretName: grimmory-translator-runtime
@@ -55,3 +55,11 @@ translationSidecar:
   resources:
     requests: {cpu: 100m, memory: 256Mi}
     limits: {cpu: "1", memory: 1Gi}
+  dashboard:
+    enabled: false
+    servicePort: 8081
+    ingress:
+      enabled: false
+      className: nginx
+      host: ""
+      annotations: {}

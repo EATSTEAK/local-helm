@@ -1,0 +1,16 @@
+{{- if and .Values.translationSidecar.enabled .Values.translationSidecar.dashboard.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: grimmory-translation
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "grimmory.labels" . | nindent 4 }}
+    app.kubernetes.io/component: translation-sidecar
+spec:
+  selector: {app.kubernetes.io/name: grimmory, app.kubernetes.io/component: app}
+  ports:
+    - name: http
+      port: {{ .Values.translationSidecar.dashboard.servicePort }}
+      targetPort: sidecar-http
+{{- end }}

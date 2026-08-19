@@ -44,7 +44,7 @@ translationSidecar:
   enabled: true
   image:
     repository: ghcr.io/eatsteak/grimmory-translation-sidecar
-    tag: 0.1.0
+    tag: 0.2.0
     pullPolicy: IfNotPresent
   imagePullSecrets:
     - name: ghcr-auth
@@ -78,3 +78,13 @@ translationSidecar:
   resources:
     requests: {cpu: 100m, memory: 256Mi}
     limits: {cpu: "1", memory: 1Gi}
+  dashboard:
+    enabled: true
+    servicePort: 8081
+    ingress:
+      enabled: true
+      className: nginx
+      host: translations.koohyom.in
+      annotations:
+        external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+        external-dns.alpha.kubernetes.io/target: 9b1820c5-3168-4638-a1f0-9fe1585eda94.cfargotunnel.com

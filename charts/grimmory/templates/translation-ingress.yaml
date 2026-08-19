@@ -1,0 +1,24 @@
+{{- if and .Values.translationSidecar.enabled .Values.translationSidecar.dashboard.enabled .Values.translationSidecar.dashboard.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grimmory-translation
+  namespace: {{ .Values.namespace | default .Release.Namespace }}
+  labels:
+    {{- include "grimmory.labels" . | nindent 4 }}
+    app.kubernetes.io/component: translation-sidecar
+  annotations:
+    {{- toYaml .Values.translationSidecar.dashboard.ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.translationSidecar.dashboard.ingress.className }}
+  rules:
+    - host: {{ required "translationSidecar.dashboard.ingress.host is required when ingress is enabled" .Values.translationSidecar.dashboard.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grimmory-translation
+                port: {name: http}
+{{- end }}

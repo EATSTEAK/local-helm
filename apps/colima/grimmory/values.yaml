@@ -1,7 +1,7 @@
 namespace: default
 image:
   repository: ghcr.io/grimmory-tools/grimmory
-  tag: v3.2.4
+  tag: v3.3.3
   pullPolicy: IfNotPresent
 timezone: Asia/Seoul
 database:

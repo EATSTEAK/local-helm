@@ -3,6 +3,9 @@ cloudflare-tunnel:
   cloudflare:
     enableWarp: false
     ingress:
+      - hostname: books.koohyom.in
+        path: '^/ngsw\.json$'
+        service: http_status:404
       - hostname: "*.koohyom.in"
         service: http://ingress-nginx-controller.ingress-nginx.svc.cluster.local:80
     secretName: cloudflare-tunnel-credentials

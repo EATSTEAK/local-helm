@@ -1,0 +1,24 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: sake-studio
+  namespace: sake
+spec:
+  interval: 10m0s
+  releaseName: sake-studio
+  targetNamespace: sake
+  dependsOn:
+    - name: sake-deps
+  chart:
+    spec:
+      chart: ./charts/sake-studio
+      interval: 10m0s
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: sake-studio-values
+      valuesKey: values.yaml

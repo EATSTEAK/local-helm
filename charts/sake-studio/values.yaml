@@ -1,0 +1,71 @@
+namespace: ""
+replicaCount: 1
+
+image:
+  repository: ghcr.io/triflam/sake-studio
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+configMap:
+  name: sake-studio-config
+
+config:
+  NODE_ENV: production
+  PORT: "4111"
+  MASTRA_STUDIO_PATH: /app/mastra/studio
+
+secretRefs:
+  - name: sake-dev-secrets
+    optional: false
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: http
+
+container:
+  port: 4111
+
+probes:
+  liveness:
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 10
+  readiness:
+    path: /health
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+ingress:
+  enabled: false
+  className: nginx
+  host: studio.sake.koohyom.in
+  annotations: {}
+  paths:
+    - path: /
+      pathType: Prefix
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi

@@ -1,22 +1,25 @@
 # Sake
 
-Colima GitOps overlay for Sake in the `sake` namespace. The deployment is split into dependency, API, and worker Helm releases.
+Colima GitOps overlay for Sake in the `sake` namespace. Dependencies, API, worker, and Mastra Studio are separate Helm releases.
 
 ## Managed resources
 
 - `namespace.yaml` creates the `sake` namespace.
-- `kustomization.yaml` generates three ConfigMaps:
+- `kustomization.yaml` generates four ConfigMaps:
   - `sake-deps-values` from `deps-values.yaml`
   - `sake-api-values` from `api-values.yaml`
   - `sake-worker-values` from `worker-values.yaml`
+  - `sake-studio-values` from `studio-values.yaml`
 - `helmrelease-deps.yaml` reconciles `HelmRelease/sake-deps` from the local chart `./charts/sake-deps`.
 - `helmrelease-api.yaml` reconciles `HelmRelease/sake-api` from `./charts/sake-api` and depends on `sake-deps`.
 - `helmrelease-worker.yaml` reconciles `HelmRelease/sake-worker` from `./charts/sake-worker` and depends on both `sake-deps` and `sake-api`.
+- `helmrelease-studio.yaml` reconciles `HelmRelease/sake-studio` from `./charts/sake-studio` and depends only on `sake-deps`.
 
 ## Runtime configuration
 
-- API image: `ghcr.io/triflam/sake-app:main-255ae25`
-- Worker image: `ghcr.io/triflam/sake-app:main-255ae25`
+- API image: `ghcr.io/triflam/sake-api`
+- Worker image: `ghcr.io/triflam/sake-worker`
+- Studio image: `ghcr.io/triflam/sake-studio`
 - Image pull Secret: `sake/ghcr-auth`
 - LLM endpoint: `http://host.docker.internal:8317/v1`
 - LLM model: `gpt-5.5`
@@ -41,7 +44,7 @@ Do not put real external API keys in chart-managed Secrets.
 
 ## Networking
 
-The API Ingress is enabled with class `nginx` and host `sake.koohyom.in`. The API also trusts both `https://sake.triflam.team` and `https://sake.koohyom.in` through `BETTER_AUTH_TRUSTED_ORIGINS`.
+The API Ingress is enabled with class `nginx` and host `sake.koohyom.in`. The Studio Ingress uses `studio.sake.koohyom.in` and requires ingress-nginx basic authentication. The API also trusts both `https://sake.triflam.team` and `https://sake.koohyom.in` through `BETTER_AUTH_TRUSTED_ORIGINS`.
 
 ## Secrets
 
@@ -55,7 +58,17 @@ kubectl -n sake create secret docker-registry ghcr-auth \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
-Create or refresh `sake-runtime-secrets` before deploying dependencies, API, and worker. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account; the remaining keys back local LLM, embedding, Tavily, LangSmith, and Crawl4AI integrations.
+Create the Studio basic-auth Secret outside GitOps. `htpasswd` prompts for the password instead of placing it in shell history:
+
+```sh
+htpasswd -c /tmp/sake-studio-auth '<username>'
+kubectl -n sake create secret generic sake-studio-basic-auth \
+  --from-file=auth=/tmp/sake-studio-auth \
+  --dry-run=client -o yaml | kubectl apply -f -
+rm /tmp/sake-studio-auth
+```
+
+Create or refresh `sake-runtime-secrets` before deploying dependencies, API, and worker. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account; the remaining keys back local LLM, embedding, Tavily, LangSmith, and Crawl4AI integrations. Studio only reads `DATABASE_URL` from `sake-dev-secrets`.
 
 Crawl4AI 0.9.2 intentionally binds only to loopback when no API token is configured, so a Kubernetes `ClusterIP` alone cannot bypass authentication. The same random token must be mounted into Crawl4AI and the Sake worker. The dependency chart also limits Crawl4AI ingress to worker pods and egress to public HTTP/HTTPS plus cluster DNS; this requires the cluster CNI to enforce `NetworkPolicy`:
 
@@ -79,12 +92,12 @@ kubectl -n sake rollout restart deployment/sake-crawl4ai deployment/sake-api dep
 
 ## Image tag updates
 
-After the release workflow publishes a new `ghcr.io/triflam/sake-app:main-<sha>` image, update both pinned tags with the **Update image tag** GitHub Actions workflow:
+After the release workflow publishes new Sake images, update the pinned tags with the **Update image tag** GitHub Actions workflow:
 
 ```text
 app: sake
 tag: main-<sha>
-targets: [{"file":"apps/colima/sake/api-values.yaml","path":"image.tag"},{"file":"apps/colima/sake/worker-values.yaml","path":"image.tag"}]
+targets: [{"file":"apps/colima/sake/api-values.yaml","path":"image.tag"},{"file":"apps/colima/sake/worker-values.yaml","path":"image.tag"},{"file":"apps/colima/sake/studio-values.yaml","path":"image.tag"}]
 ```
 
 ## Operations
@@ -93,6 +106,7 @@ targets: [{"file":"apps/colima/sake/api-values.yaml","path":"image.tag"},{"file"
 flux reconcile helmrelease sake-deps -n sake
 flux reconcile helmrelease sake-api -n sake
 flux reconcile helmrelease sake-worker -n sake
-kubectl -n sake get helmrelease sake-deps sake-api sake-worker
+flux reconcile helmrelease sake-studio -n sake
+kubectl -n sake get helmrelease sake-deps sake-api sake-worker sake-studio
 kubectl -n sake get pods,pvc
 ```

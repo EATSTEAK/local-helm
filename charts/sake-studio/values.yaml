@@ -41,7 +41,7 @@ probes:
 ingress:
   enabled: false
   className: nginx
-  host: studio.sake.koohyom.in
+  host: studio-sake.koohyom.in
   annotations: {}
   paths:
     - path: /

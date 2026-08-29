@@ -44,7 +44,7 @@ Do not put real external API keys in chart-managed Secrets.
 
 ## Networking
 
-The API Ingress is enabled with class `nginx` and host `sake.koohyom.in`. The Studio Ingress uses `studio.sake.koohyom.in` and requires ingress-nginx basic authentication. The API also trusts both `https://sake.triflam.team` and `https://sake.koohyom.in` through `BETTER_AUTH_TRUSTED_ORIGINS`.
+The API Ingress is enabled with class `nginx` and host `sake.koohyom.in`. The Studio Ingress uses `studio-sake.koohyom.in` and requires ingress-nginx basic authentication. The API also trusts both `https://sake.triflam.team` and `https://sake.koohyom.in` through `BETTER_AUTH_TRUSTED_ORIGINS`.
 
 ## Secrets
 

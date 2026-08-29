@@ -13,8 +13,12 @@ configMapGenerator:
   - name: sake-worker-values
     files:
       - values.yaml=worker-values.yaml
+  - name: sake-studio-values
+    files:
+      - values.yaml=studio-values.yaml
 resources:
   - namespace.yaml
   - helmrelease-deps.yaml
   - helmrelease-api.yaml
   - helmrelease-worker.yaml
+  - helmrelease-studio.yaml

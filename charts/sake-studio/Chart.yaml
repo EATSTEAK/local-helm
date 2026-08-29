@@ -1,0 +1,5 @@
+apiVersion: v2
+name: sake-studio
+description: Sake Mastra Studio service
+version: 0.1.0
+appVersion: "main"

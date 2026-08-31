@@ -8,6 +8,16 @@ imagePullSecrets:
 secretRefs:
   - name: sake-dev-secrets
     optional: false
+  - name: sake-runtime-secrets
+    optional: false
+config:
+  LLM_BASE_URL: http://host.docker.internal:8317/v1
+  LLM_MODEL: gpt-5.6-terra
+  LLM_TIMEOUT_MS: "6000000"
+  CRAWL4AI_BASE_URL: http://sake-crawl4ai:11235
+  RESEARCH_CRAWL_ENABLED: "true"
+  RESEARCH_SEARCH_ENABLED: "true"
+  RESEARCH_SEARCH_PROVIDER: tavily
 ingress:
   enabled: true
   className: nginx

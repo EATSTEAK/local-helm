@@ -28,7 +28,7 @@ Colima GitOps overlay for Sake in the `sake` namespace. Dependencies, API, worke
 - Worker embedding model: `gemini-embedding-2`
 - Embedding dimensions: `1536`
 
-The API chart runs Prisma migration and master account seed jobs as Helm hooks. The worker is configured for Tavily-backed research search, Crawl4AI crawling, and LangSmith tracing in the local overlay.
+The API chart runs Prisma migration and master account seed jobs as Helm hooks. The worker and Studio are configured for Tavily-backed research search and Crawl4AI crawling; the worker also enables LangSmith tracing.
 
 ## Dependencies
 
@@ -68,9 +68,9 @@ kubectl -n sake create secret generic sake-studio-basic-auth \
 rm /tmp/sake-studio-auth
 ```
 
-Create or refresh `sake-runtime-secrets` before deploying dependencies, API, and worker. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account; the remaining keys back local LLM, embedding, Tavily, LangSmith, and Crawl4AI integrations. Studio only reads `DATABASE_URL` from `sake-dev-secrets`.
+Create or refresh `sake-runtime-secrets` before deploying dependencies, API, worker, and Studio. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account; the remaining keys back local LLM, embedding, Tavily, LangSmith, and Crawl4AI integrations. Studio reads provider credentials from this Secret so its registered research tools match the worker.
 
-Crawl4AI 0.9.2 intentionally binds only to loopback when no API token is configured, so a Kubernetes `ClusterIP` alone cannot bypass authentication. The same random token must be mounted into Crawl4AI and the Sake worker. The dependency chart also limits Crawl4AI ingress to worker pods and egress to public HTTP/HTTPS plus cluster DNS; this requires the cluster CNI to enforce `NetworkPolicy`:
+Crawl4AI 0.9.2 intentionally binds only to loopback when no API token is configured, so a Kubernetes `ClusterIP` alone cannot bypass authentication. The same random token must be mounted into Crawl4AI, the Sake worker, and Studio. The dependency chart limits Crawl4AI ingress to worker and Studio pods and egress to public HTTP/HTTPS plus cluster DNS; this requires the cluster CNI to enforce `NetworkPolicy`:
 
 ```sh
 kubectl -n sake create secret generic sake-runtime-secrets \
@@ -87,7 +87,7 @@ kubectl -n sake create secret generic sake-runtime-secrets \
 If only Secret data changes, restart running pods so `envFrom` picks up the new values:
 
 ```sh
-kubectl -n sake rollout restart deployment/sake-crawl4ai deployment/sake-api deployment/sake-worker
+kubectl -n sake rollout restart deployment/sake-crawl4ai deployment/sake-api deployment/sake-worker deployment/sake-studio
 ```
 
 ## Image tag updates

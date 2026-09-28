@@ -22,7 +22,7 @@ Colima GitOps overlay for Sake in the `sake` namespace. Dependencies, API, worke
 - Studio image: `ghcr.io/triflam/sake-studio`
 - Image pull Secret: `sake/ghcr-auth`
 - LLM endpoint: `http://host.docker.internal:8317/v1`
-- LLM model: `gpt-5.5`
+- LLM model: `gpt-6-luna`
 - Embedding endpoint: `https://generativelanguage.googleapis.com/v1beta/openai`
 - API embedding model: `gemini-embedding-2-preview`
 - Worker embedding model: `gemini-embedding-2`

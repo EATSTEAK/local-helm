@@ -36,7 +36,9 @@ The API chart runs Prisma migration and master account seed jobs as Helm hooks. 
 
 - PostgreSQL with pgvector: `pgvector/pgvector:pg16`, PVC `sake-postgres-data`, `8Gi`
 - Redis: `redis:7-alpine`
-- MinIO: `minio/minio:RELEASE.2025-09-07T16-13-09Z`, bucket `sake-dev`, PVC `sake-minio-data`, `10Gi`
+- Silo (MinIO-compatible):
+  `pgsty/silo:RELEASE.2026-09-16T00-00-00Z`, bucket `sake-dev`, PVC
+  `sake-minio-data`, `10Gi`
 - Crawl4AI: `unclecode/crawl4ai:0.9.2` pinned by digest
 - Secret: `sake-dev-secrets` with local-only Postgres and MinIO defaults
 

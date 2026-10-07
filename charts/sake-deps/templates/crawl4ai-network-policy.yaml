@@ -27,6 +27,10 @@ spec:
             matchLabels:
               app.kubernetes.io/name: sake-studio
               app.kubernetes.io/instance: sake-studio
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: sake-api
+              app.kubernetes.io/instance: sake-api
       ports:
         - protocol: TCP
           port: {{ .Values.crawl4ai.service.port }}

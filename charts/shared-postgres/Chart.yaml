@@ -1,0 +1,6 @@
+apiVersion: v2
+name: shared-postgres
+description: Small shared PostgreSQL instance with isolated application databases
+type: application
+version: 0.1.0
+appVersion: "16.14"

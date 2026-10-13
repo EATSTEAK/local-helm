@@ -1,0 +1,14 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: OCIRepository
+metadata:
+  name: phoenix
+  namespace: flux-system
+spec:
+  interval: 1h0m0s
+  url: oci://registry-1.docker.io/arizephoenix/phoenix-helm
+  ref:
+    # Official chart 12.0.17 (Phoenix 20.19.0); do not follow a floating tag.
+    digest: sha256:7eb5274cdbac1f2bd8e6715e579ded1060f113aab3f0feac071ed9a9041adc51
+  layerSelector:
+    mediaType: application/vnd.cncf.helm.chart.content.v1.tar+gzip
+    operation: copy

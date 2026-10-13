@@ -1,0 +1,39 @@
+name: Validate Phoenix deployment
+
+on:
+  pull_request:
+    paths:
+      - apps/colima/phoenix/**
+      - apps/colima/shared-postgres/**
+      - apps/colima/kustomization.yaml
+      - charts/shared-postgres/**
+      - infrastructure/colima/**
+      - config/colima/values.yaml
+      - scripts/*phoenix*
+      - tests/*phoenix*
+      - tests/postgres_bootstrap_test.rb
+      - .github/workflows/validate-phoenix.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
+        with:
+          version: v3.17.3
+      - uses: azure/setup-kubectl@c0c8b32d33a5244f1e5947304550403b63930415 # v4
+        with:
+          version: v1.33.4
+      - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1
+        with:
+          ruby-version: "3.3"
+      - name: Validate charts, GitOps overlays and HTTP-only post-rendering
+        run: bash scripts/validate-phoenix.sh
+      - name: Verify DB bootstrap, isolation and data-preserving retry
+        run: ruby tests/postgres_bootstrap_test.rb

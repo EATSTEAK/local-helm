@@ -1,0 +1,32 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: shared-postgres
+  namespace: default
+spec:
+  interval: 10m0s
+  timeout: 10m0s
+  releaseName: shared-postgres
+  targetNamespace: default
+  chart:
+    spec:
+      chart: ./charts/shared-postgres
+      interval: 10m0s
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: shared-postgres-values
+      valuesKey: values.yaml
+  install:
+    remediation:
+      retries: 0
+  upgrade:
+    remediation:
+      retries: 0
+  # Never automatically uninstall a stateful DB on a failed bootstrap/upgrade.
+  uninstall:
+    keepHistory: true

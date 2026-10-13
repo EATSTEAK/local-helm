@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "shared-postgres.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Release.Name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "shared-postgres.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "shared-postgres.labels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: postgres
+          image: {{ include "shared-postgres.image" . | quote }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          args:
+            - postgres
+            - -c
+            - {{ printf "max_connections=%v" .Values.settings.maxConnections | quote }}
+            - -c
+            - {{ printf "shared_buffers=%s" .Values.settings.sharedBuffers | quote }}
+            - -c
+            - {{ printf "work_mem=%s" .Values.settings.workMem | quote }}
+            - -c
+            - {{ printf "maintenance_work_mem=%s" .Values.settings.maintenanceWorkMem | quote }}
+            - -c
+            - {{ printf "autovacuum_work_mem=%s" .Values.settings.autovacuumWorkMem | quote }}
+            - -c
+            - {{ printf "max_wal_size=%s" .Values.settings.maxWalSize | quote }}
+            - -c
+            - password_encryption=scram-sha-256
+          env:
+            - {name: POSTGRES_USER, value: postgres}
+            - {name: POSTGRES_DB, value: postgres}
+            - {name: PGDATA, value: /var/lib/postgresql/data/pgdata}
+            - {name: POSTGRES_PASSWORD_FILE, value: /run/postgres-secret/password}
+            - {name: POSTGRES_INITDB_ARGS, value: "--auth-host=scram-sha-256 --auth-local=peer"}
+          ports:
+            - {name: postgres, containerPort: 5432}
+          startupProbe:
+            exec: {command: [pg_isready, -h, "127.0.0.1", -U, postgres, -d, postgres]}
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 60
+          readinessProbe:
+            exec: {command: [pg_isready, -h, "127.0.0.1", -U, postgres, -d, postgres]}
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            exec: {command: [pg_isready, -h, "127.0.0.1", -U, postgres, -d, postgres]}
+            periodSeconds: 20
+            timeoutSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - {name: data, mountPath: /var/lib/postgresql/data}
+            - {name: auth, mountPath: /run/postgres-secret, readOnly: true}
+            - {name: run, mountPath: /var/run/postgresql}
+            - {name: tmp, mountPath: /tmp}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.claimName }}
+        - name: auth
+          secret:
+            secretName: {{ required "auth.existingSecret is required" .Values.auth.existingSecret }}
+            defaultMode: 0440
+            items:
+              - key: {{ .Values.auth.passwordKey }}
+                path: password
+        - name: run
+          emptyDir: {sizeLimit: 16Mi}
+        - name: tmp
+          emptyDir: {sizeLimit: 128Mi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    {{- include "shared-postgres.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - {name: postgres, port: 5432, targetPort: postgres}
+  selector:
+    {{- include "shared-postgres.labels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.persistence.claimName }}
+  labels:
+    {{- include "shared-postgres.labels" . | nindent 4 }}
+  annotations:
+    # Uninstall/rollback must not delete shared application data.
+    helm.sh/resource-policy: keep
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: {{ .Values.persistence.storageClassName }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}

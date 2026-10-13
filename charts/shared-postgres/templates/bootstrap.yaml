@@ -1,0 +1,83 @@
+{{- if .Values.databases }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-bootstrap
+data:
+  bootstrap.sql: |
+    {{- .Files.Get "files/bootstrap.sql" | nindent 4 }}
+{{- range .Values.databases }}
+{{- if not (and (regexMatch "^[a-z][a-z0-9_]{0,62}$" .name) (regexMatch "^[a-z][a-z0-9_]{0,62}$" .owner)) }}
+{{- fail "database names and owners must be simple lowercase SQL identifiers" }}
+{{- end }}
+{{- if or (lt (int .connectionLimit) 1) (gt (int .connectionLimit) (int $.Values.settings.maxConnections)) }}
+{{- fail "database.connectionLimit must be positive and no greater than maxConnections" }}
+{{- end }}
+{{- if or (has .name (list "postgres" "template0" "template1")) (eq .owner "postgres") }}
+{{- fail "administrative databases/roles cannot be application bootstrap targets" }}
+{{- end }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $.Release.Name }}-bootstrap-{{ .name | replace "_" "-" }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "5"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: shared-postgres-bootstrap
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+        shared-postgres-client: "true"
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        runAsGroup: 999
+        seccompProfile: {type: RuntimeDefault}
+      containers:
+        - name: bootstrap
+          image: {{ include "shared-postgres.image" $ | quote }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          command: [psql, -X, --set=ON_ERROR_STOP=1, --file=/bootstrap/bootstrap.sql]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: {drop: [ALL]}
+          env:
+            - {name: PGHOST, value: {{ $.Release.Name | quote }}}
+            - {name: PGPORT, value: "5432"}
+            - {name: PGUSER, value: postgres}
+            - {name: PGDATABASE, value: postgres}
+            - {name: PGCONNECT_TIMEOUT, value: "10"}
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.auth.existingSecret }}
+                  key: {{ $.Values.auth.passwordKey }}
+            - {name: APP_DATABASE, value: {{ .name | quote }}}
+            - {name: APP_OWNER, value: {{ .owner | quote }}}
+            - {name: APP_CONNECTION_LIMIT, value: {{ .connectionLimit | toString | quote }}}
+            - name: APP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "database.existingSecret is required" .existingSecret }}
+                  key: {{ required "database.passwordKey is required" .passwordKey }}
+          resources:
+            requests: {cpu: 25m, memory: 32Mi}
+            limits: {cpu: 100m, memory: 128Mi}
+          volumeMounts:
+            - {name: bootstrap, mountPath: /bootstrap, readOnly: true}
+      volumes:
+        - name: bootstrap
+          configMap:
+            name: {{ $.Release.Name }}-bootstrap
+{{- end }}
+{{- end }}

@@ -1,0 +1,77 @@
+fullnameOverride: phoenix
+replicaCount: 1
+deployment:
+  # One migration owner at a time; a brief upgrade outage is acceptable.
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  podLabels:
+    shared-postgres-client: "true"
+image:
+  registry: docker.io
+  repository: arizephoenix/phoenix
+  # Fixed linux/arm64 manifest for the Colima node.
+  tag: version-20.19.0-nonroot@sha256:364198dff5f3f2d5f151e108ee3a0bceaa627864ac525fe2ea4fe0c97488f714
+  pullPolicy: IfNotPresent
+postgresql:
+  enabled: false
+persistence:
+  enabled: false
+  inMemory: false
+database:
+  url: ""
+  # Displayed operating budget, NOT a physical PostgreSQL/PVC quota.
+  allocatedStorageGiB: 3
+  defaultRetentionPolicyDays: 7
+  postgres:
+    host: shared-postgres.default.svc.cluster.local
+    port: 5432
+    db: phoenix
+    user: phoenix
+    password: ""
+auth:
+  enableAuth: true
+  createSecret: false
+  name: phoenix-secret
+  useSecureCookies: true
+  enableStrongPasswordPolicy: true
+  csrfTrustedOrigins:
+    - https://rise.koohyom.in
+  oauth2AuthorizationServer:
+    enabled: false
+  # Replace the chart's entire array: no generated admin/SMTP bearer secrets.
+  secret:
+    - key: PHOENIX_SECRET
+    - key: PHOENIX_DEFAULT_ADMIN_INITIAL_PASSWORD
+    - key: PHOENIX_POSTGRES_PASSWORD
+server:
+  host: "0.0.0.0"
+  port: 6006
+  rootUrl: https://rise.koohyom.in
+  maxSpansQueueSize: 5000
+  enablePrometheus: false
+  telemetryEnabled: false
+  allowExternalResources: false
+  enableMcpServer: false
+  enableMcpCodeMode: false
+  allowedProviders: NONE
+sandbox:
+  allowedProviders: NONE
+service:
+  type: ClusterIP
+ingress:
+  enabled: false
+resources:
+  requests: {cpu: 500m, memory: 1Gi}
+  limits: {cpu: "1", memory: 2Gi}
+securityContext:
+  pod:
+    enabled: true
+  container:
+    enabled: true
+healthChecks:
+  startupProbe:
+    enabled: true
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 60

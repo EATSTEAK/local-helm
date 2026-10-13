@@ -7,4 +7,6 @@ resources:
   - insights-write
   - ns2-alert-bot
   - open-webui
+  - phoenix
   - sake
+  - shared-postgres

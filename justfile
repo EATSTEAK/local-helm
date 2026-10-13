@@ -45,3 +45,10 @@ flux-reconcile:
     flux reconcile source git flux-system -n flux-system
     flux reconcile kustomization infrastructure -n flux-system
     flux reconcile kustomization apps -n flux-system
+
+# These do not deploy workloads. Secret creation is an explicit pre-merge step.
+phoenix-secrets:
+    bash scripts/phoenix-secrets.sh
+
+phoenix-validate:
+    bash scripts/validate-phoenix.sh

@@ -26,7 +26,9 @@ This root README is an index. App-specific deployment details live in each app R
 | Insights Write | `koohyomin` | `write.koohyom.in` | [`apps/colima/insights-write/README.md`](apps/colima/insights-write/README.md) |
 | NS2 Alert Bot | `koohyomin` | Worker, no Ingress | [`apps/colima/ns2-alert-bot/README.md`](apps/colima/ns2-alert-bot/README.md) |
 | Open WebUI | `open-webui` | `chat.koohyom.in` | [`apps/colima/open-webui/README.md`](apps/colima/open-webui/README.md) |
+| Phoenix | `default` | `rise.koohyom.in` | [`apps/colima/phoenix/README.md`](apps/colima/phoenix/README.md) |
 | Sake | `sake` | `sake.koohyom.in`, `studio-sake.koohyom.in` | [`apps/colima/sake/README.md`](apps/colima/sake/README.md) |
+| Shared PostgreSQL | `default` | Internal service only | [`apps/colima/shared-postgres/README.md`](apps/colima/shared-postgres/README.md) |
 
 ## Local cluster operations
 
@@ -44,6 +46,11 @@ just flux-reconcile
 ```
 
 Flux syncs the Colima cluster from `clusters/colima` on the `main` branch. The app layer includes every overlay listed in `apps/colima/kustomization.yaml`.
+
+The profile now targets 4 CPU / 12GiB RAM / 100GiB disk. A Git merge does not
+resize the running VM: run `just colima-restart` during a maintenance window.
+Prepare the runtime Secrets before merging the Phoenix/shared PostgreSQL
+overlays; see the [Phoenix rollout checklist](apps/colima/phoenix/README.md).
 
 ## Cloudflare Tunnel chart
 

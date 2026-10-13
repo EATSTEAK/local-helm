@@ -1,0 +1,58 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: phoenix
+  namespace: default
+spec:
+  interval: 10m0s
+  timeout: 10m0s
+  releaseName: phoenix
+  targetNamespace: default
+  dependsOn:
+    # Ready includes the post-install database/role bootstrap hook.
+    - name: shared-postgres
+  chartRef:
+    kind: OCIRepository
+    name: phoenix
+    namespace: flux-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: phoenix-values
+      valuesKey: values.yaml
+  install:
+    remediation:
+      retries: 2
+  upgrade:
+    remediation:
+      retries: 1
+  postRenderers:
+    - kustomize:
+        patches:
+          # The upstream chart unconditionally exposes 4317 and 9090.
+          - target:
+              version: v1
+              kind: Service
+              name: phoenix-svc
+            patch: |
+              - op: replace
+                path: /spec/ports
+                value:
+                  - name: phoenix-app
+                    port: 6006
+                    targetPort: 6006
+                    protocol: TCP
+          - target:
+              group: apps
+              version: v1
+              kind: Deployment
+              name: phoenix
+            patch: |
+              - op: replace
+                path: /spec/template/spec/containers/0/ports
+                value:
+                  - name: http
+                    containerPort: 6006
+                    protocol: TCP
+              - op: add
+                path: /spec/template/spec/automountServiceAccountToken
+                value: false

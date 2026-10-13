@@ -1,0 +1,28 @@
+image:
+  # Same arm64-capable PostgreSQL 16.14 image already cached by Sake.
+  repository: docker.io/pgvector/pgvector
+  digest: sha256:00ba258a66dac104fd5171074a0084462a64a1369d8513f3d0a634e2f24d15bc
+  pullPolicy: IfNotPresent
+auth:
+  existingSecret: shared-postgres-auth
+  passwordKey: POSTGRES_PASSWORD
+persistence:
+  claimName: shared-postgres-data
+  storageClassName: local-path
+  size: 8Gi
+resources:
+  requests: {cpu: 100m, memory: 256Mi}
+  limits: {cpu: "1", memory: 1Gi}
+settings:
+  maxConnections: 50
+  sharedBuffers: 128MB
+  workMem: 4MB
+  maintenanceWorkMem: 64MB
+  autovacuumWorkMem: 32MB
+  maxWalSize: 512MB
+databases:
+  - name: phoenix
+    owner: phoenix
+    connectionLimit: 20
+    existingSecret: phoenix-secret
+    passwordKey: PHOENIX_POSTGRES_PASSWORD

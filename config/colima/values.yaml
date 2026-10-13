@@ -1,8 +1,8 @@
 # Colima profile for the local Kubernetes cluster.
 # Copy to ~/.colima/default/colima.yaml or run `just colima-restart`.
-cpu: 2
+cpu: 4
 disk: 100
-memory: 6
+memory: 12
 arch: aarch64
 runtime: docker
 hostname: colima

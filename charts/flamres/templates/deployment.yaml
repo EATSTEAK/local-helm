@@ -7,6 +7,9 @@ metadata:
     {{- include "flamres.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  # One Slack/scheduler instance must own the file-backed state during upgrades.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "flamres.selectorLabels" . | nindent 6 }}
@@ -38,6 +41,27 @@ spec:
             - name: http
               containerPort: {{ .Values.container.port }}
               protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- if or .Values.persistence.opencodeData.enabled .Values.persistence.workdir.enabled }}

@@ -46,7 +46,15 @@ spec:
         - name: bootstrap
           image: {{ include "shared-postgres.image" $ | quote }}
           imagePullPolicy: {{ $.Values.image.pullPolicy }}
-          command: [psql, -X, --set=ON_ERROR_STOP=1, --file=/bootstrap/bootstrap.sql]
+          command: [sh, -ec]
+          args:
+            - |
+              # New Pods can start before NetworkPolicy rules converge.
+              # The Job deadline bounds this wait; SQL/auth errors stay fatal.
+              until pg_isready -t 2; do
+                sleep 2
+              done
+              exec psql -X --set=ON_ERROR_STOP=1 --file=/bootstrap/bootstrap.sql
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: true

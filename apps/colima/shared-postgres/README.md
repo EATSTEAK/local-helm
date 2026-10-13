@@ -32,8 +32,17 @@ application database and schema, as well as PUBLIC connections to administrative
 this list; deletion always requires a separate deliberate operation.
 
 Helm waits for the hook to complete before the DB HelmRelease becomes Ready.
-Phoenix depends on that readiness. A failed Job is retained for inspection; fix
-the cause and explicitly retry the release rather than uninstalling the database.
+Phoenix depends on that readiness. The hook waits for PostgreSQL through the
+Service before running SQL, allowing new Pod NetworkPolicy rules to converge.
+The Job's 300-second deadline bounds this wait; authentication and SQL errors
+still fail the container rather than being retried by the readiness loop.
+A failed Job is retained for inspection; fix the cause and explicitly retry the
+release rather than uninstalling the database. After the fix is merged and the
+Flux source has synced, a stalled release can be retried with:
+
+```sh
+flux reconcile helmrelease shared-postgres -n default --with-source --reset
+```
 
 ## Adding an application later
 

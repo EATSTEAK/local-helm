@@ -79,6 +79,43 @@ class PhoenixConfigurationTest < Minitest::Test
     refute self.class.postgres.any? { |d| d["kind"] == "Secret" }
   end
 
+  def test_database_bootstrap_waits_for_connectivity_without_retrying_sql_errors
+    job = resource(self.class.postgres, "Job", "shared-postgres-bootstrap-phoenix")
+    assert_equal 300, job.dig("spec", "activeDeadlineSeconds"), "Must bound the readiness wait"
+    container = job.dig("spec", "template", "spec", "containers", 0)
+    [1, 3].product([0, 2, 3]).each do |ready_after, sql_status|
+      Dir.mktmpdir("postgres-readiness-test-") do |dir|
+        # Exercise the rendered hook command without network access or credentials.
+        %w[pg_isready sleep psql].each do |name|
+          path = File.join(dir, name)
+          File.write(path, <<~'SH')
+            #!/bin/sh
+            name=$(basename "$0")
+            echo "$name" >> "$CALL_LOG"
+            case "$name" in
+              pg_isready) [ "$(grep -c '^pg_isready$' "$CALL_LOG")" -ge "$READY_AFTER" ] ;;
+              sleep) exit 0 ;;
+              psql)
+                printf '%s\n' "$@" > "$PSQL_ARGS"
+                exit "$PSQL_STATUS"
+                ;;
+            esac
+          SH
+          File.chmod(0o755, path)
+        end
+        env = {"PATH" => "#{dir}:#{ENV.fetch("PATH")}", "CALL_LOG" => File.join(dir, "calls"),
+               "PSQL_ARGS" => File.join(dir, "psql-args"), "READY_AFTER" => ready_after.to_s,
+               "PSQL_STATUS" => sql_status.to_s}
+        _, error, status = Open3.capture3(env, *container.fetch("command"), *container.fetch("args", []))
+        assert_equal sql_status, status.exitstatus, error
+        assert_equal ["pg_isready", "sleep"] * (ready_after - 1) + ["pg_isready", "psql"],
+          File.readlines(env.fetch("CALL_LOG"), chomp: true)
+        assert_equal ["-X", "--set=ON_ERROR_STOP=1", "--file=/bootstrap/bootstrap.sql"],
+          File.readlines(env.fetch("PSQL_ARGS"), chomp: true)
+      end
+    end
+  end
+
   def test_phoenix_has_only_http_and_no_sqlite_or_bundled_postgres
     service = resource(self.class.phoenix, "Service", "phoenix-svc")
     assert_equal "ClusterIP", service.dig("spec", "type")

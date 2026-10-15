@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "sake-deps.minioName" . }}-bucket-{{ .Release.Revision }}
+  name: {{ include "sake-deps.minioName" . }}-bucket
   namespace: {{ include "sake-deps.namespace" . }}
   labels:
     {{- include "sake-deps.labels" . | nindent 4 }}

@@ -17,6 +17,13 @@ config:
   LLM_BASE_URL: http://host.docker.internal:8317/v1
   LLM_MODEL: gpt-5.6-terra
   LLM_TIMEOUT_MS: "6000000"
+  EMBEDDING_BASE_URL: https://generativelanguage.googleapis.com/v1beta/openai
+  EMBEDDING_MODEL: gemini-embedding-2
+  EMBEDDING_DIMENSIONS: "1536"
+  OBJECT_STORE_ENDPOINT: sake-minio
+  OBJECT_STORE_PORT: "9000"
+  OBJECT_STORE_USE_SSL: "false"
+  OBJECT_STORE_BUCKET: sake-dev
   CRAWL4AI_BASE_URL: http://sake-crawl4ai:11235
   RESEARCH_CRAWL_ENABLED: "true"
   RESEARCH_SEARCH_ENABLED: "true"

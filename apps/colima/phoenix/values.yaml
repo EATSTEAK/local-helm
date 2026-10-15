@@ -11,7 +11,8 @@ image:
   registry: docker.io
   repository: arizephoenix/phoenix
   # Fixed linux/arm64 manifest for the Colima node.
-  tag: version-20.19.0-nonroot@sha256:364198dff5f3f2d5f151e108ee3a0bceaa627864ac525fe2ea4fe0c97488f714
+  tag: "version-20.19.0-nonroot@sha256:\
+    364198dff5f3f2d5f151e108ee3a0bceaa627864ac525fe2ea4fe0c97488f714"
   pullPolicy: IfNotPresent
 postgresql:
   enabled: false
@@ -52,7 +53,7 @@ server:
   enablePrometheus: false
   telemetryEnabled: false
   allowExternalResources: false
-  enableMcpServer: false
+  enableMcpServer: true
   enableMcpCodeMode: false
   allowedProviders: NONE
 sandbox:

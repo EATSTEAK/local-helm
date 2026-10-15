@@ -135,7 +135,8 @@ class PhoenixConfigurationTest < Minitest::Test
     %w[PHOENIX_ENABLE_AUTH PHOENIX_USE_SECURE_COOKIES PHOENIX_ENABLE_STRONG_PASSWORD_POLICY].each do |key|
       assert_equal "true", config[key], key
     end
-    %w[PHOENIX_ENABLE_MCP_SERVER PHOENIX_ENABLE_MCP_CODE_MODE PHOENIX_ENABLE_PROMETHEUS PHOENIX_TELEMETRY_ENABLED PHOENIX_ENABLE_OAUTH2_AUTHORIZATION_SERVER].each do |key|
+    assert_equal "true", config["PHOENIX_ENABLE_MCP_SERVER"]
+    %w[PHOENIX_ENABLE_MCP_CODE_MODE PHOENIX_ENABLE_PROMETHEUS PHOENIX_TELEMETRY_ENABLED PHOENIX_ENABLE_OAUTH2_AUTHORIZATION_SERVER].each do |key|
       assert_equal "false", config[key], key
     end
     assert_equal "shared-postgres.default.svc.cluster.local", config["PHOENIX_POSTGRES_HOST"]

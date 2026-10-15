@@ -32,8 +32,9 @@ switch. The Pod's NetworkPolicy allows incoming TCP 6006 only from ingress-nginx
 and outgoing PostgreSQL/DNS only. No gRPC ingestion endpoint is supported.
 
 Authentication, secure cookies and the strong password policy are enabled.
-Telemetry, Prometheus, external fonts, MCP, OAuth2 authorization-server endpoints,
-model-provider and sandbox-provider access are disabled for this initial rollout.
+The authenticated MCP server is enabled at `https://rise.koohyom.in/mcp`.
+MCP code mode, telemetry, Prometheus, external fonts, OAuth2 authorization-server
+endpoints, model-provider and sandbox-provider access remain disabled.
 The DB role is not a superuser and has a connection limit of 20.
 
 ## Pre-merge rollout checklist
@@ -95,6 +96,19 @@ The Ingress limits requests to 8MiB and read/send timeouts to 60 seconds. Keep
 exporter batches below that limit. There is no OTLP/gRPC endpoint in this setup.
 Direct in-cluster access from ordinary producer Pods is intentionally blocked;
 use the public HTTP route, or explicitly review a NetworkPolicy change first.
+
+## MCP access
+
+Connect a Streamable HTTP MCP client to `https://rise.koohyom.in/mcp` with
+`Authorization: Bearer <PHOENIX_API_KEY>`. Store the API key in the client's
+secret store or environment, never in Git. Browser OAuth login is not enabled.
+The endpoint uses the existing HTTPS ingress and requires no additional port
+or NetworkPolicy allowance. Unauthenticated requests must be rejected.
+
+Code mode is disabled, so operations are exposed as individual tools rather
+than through the Python `execute` tool. MCP is not read-only: tools can mutate
+Phoenix data within the API key's permissions. Use a dedicated, least-privilege
+key for each client and approve write operations deliberately.
 
 ## Capacity and retention
 

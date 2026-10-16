@@ -1,7 +1,7 @@
 namespace: flamres
 image:
   repository: ghcr.io/triflam/flamres-bot
-  tag: main-604b895
+  tag: main-1906971
   pullPolicy: IfNotPresent
 imagePullSecrets:
   - name: ghcr-auth

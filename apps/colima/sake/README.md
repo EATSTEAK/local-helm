@@ -39,10 +39,15 @@ The API chart runs Prisma migration and master account seed jobs as Helm hooks. 
 - Silo (MinIO-compatible):
   `pgsty/silo:RELEASE.2026-09-16T00-00-00Z`, bucket `sake-dev`, PVC
   `sake-minio-data`, `10Gi`
-- Crawl4AI: `unclecode/crawl4ai:0.9.2` pinned by digest
+- Crawl4AI: `unclecode/crawl4ai:0.9.5` pinned by digest
 - Secret: `sake-dev-secrets` with local-only Postgres and MinIO defaults
 
 Do not put real external API keys in chart-managed Secrets.
+
+PDF requests to `/crawl` must explicitly select `PDFContentScrapingStrategy`
+in `crawler_config.params.scraping_strategy`. The image includes PDF parsing
+dependencies, but does not auto-detect PDFs. Scanned PDFs still require separate
+OCR.
 
 ## Networking
 
@@ -72,7 +77,13 @@ rm /tmp/sake-studio-auth
 
 Create or refresh `sake-runtime-secrets` before deploying dependencies, API, worker, and Studio. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account; the remaining keys back local LLM, embedding, Tavily, LangSmith, and Crawl4AI integrations. Studio reads provider credentials from this Secret so its registered research tools match the worker.
 
-Crawl4AI 0.9.2 intentionally binds only to loopback when no API token is configured, so a Kubernetes `ClusterIP` alone cannot bypass authentication. The same random token must be mounted into Crawl4AI, the Sake worker, and Studio. The dependency chart limits Crawl4AI ingress to worker and Studio pods and egress to public HTTP/HTTPS plus cluster DNS; this requires the cluster CNI to enforce `NetworkPolicy`:
+Crawl4AI 0.9.5 intentionally binds only to loopback when no API token is
+configured, so a Kubernetes `ClusterIP` alone cannot bypass authentication.
+The same random
+token must be mounted into Crawl4AI, the Sake worker, and Studio. The dependency
+chart limits Crawl4AI ingress to worker and Studio pods and egress to public
+HTTP/HTTPS plus cluster DNS; this requires the cluster CNI to enforce
+`NetworkPolicy`:
 
 ```sh
 kubectl -n sake create secret generic sake-runtime-secrets \

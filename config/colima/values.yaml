@@ -34,6 +34,25 @@ nestedVirtualization: false
 mountType: virtiofs
 mountInotify: true
 forwardAgent: false
+
+# K3s >= 1.32 loads this drop-in without replacing its default kubelet settings.
+provision:
+  - mode: system
+    script: |
+      #!/bin/sh
+      set -eu
+      config_dir="/var/lib/rancher/k3s/agent/etc/kubelet.conf.d"
+      mkdir -p "$config_dir"
+      tmp="$(mktemp "$config_dir/.image-gc.XXXXXX")"
+      trap 'rm -f "$tmp"' EXIT
+      cat > "$tmp" <<'EOF'
+      apiVersion: kubelet.config.k8s.io/v1beta1
+      kind: KubeletConfiguration
+      imageMaximumGCAge: 24h
+      EOF
+      chmod 0644 "$tmp"
+      mv -f "$tmp" "$config_dir/10-image-gc.conf"
+
 sshConfig: true
 sshPort: 0
 mounts: []

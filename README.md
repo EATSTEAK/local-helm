@@ -52,6 +52,63 @@ resize the running VM: run `just colima-restart` during a maintenance window.
 Prepare the runtime Secrets before merging the Phoenix/shared PostgreSQL
 overlays; see the [Phoenix rollout checklist](apps/colima/phoenix/README.md).
 
+### Automatic local image cleanup
+
+The Colima profile provisions a kubelet drop-in at
+`/var/lib/rancher/k3s/agent/etc/kubelet.conf.d/10-image-gc.conf` with
+`imageMaximumGCAge: 24h`. This uses K3s >= 1.32's drop-in support and preserves
+its other kubelet defaults.
+
+- Kubelet checks for unused images about every five minutes, independently of
+  Flux reconciliation. Images unused for 24 hours become eligible for deletion.
+- Disk-based GC remains at its defaults: start above 85% usage and try to reduce
+  usage to 80%. It can remove unused images sooner; 24 hours is not a minimum
+  retention guarantee. Restarting kubelet resets its image-age tracking.
+- GC targets local images in this Colima runtime, not GHCR images, Docker build
+  cache, volumes or PVCs. It is not restricted to Flux-managed applications.
+  In-use images are protected by kubelet/runtime checks; images for scaled-down
+  workloads or rollback may need to be pulled again. Keep those images available
+  in the registry and ensure pull credentials are valid.
+- No pruning command is added to `just flux-reconcile`: reconciling manifests
+  does not guarantee every application's rollout has finished.
+
+Apply only during an approved maintenance window (this restarts the local
+cluster):
+
+```sh
+just colima-restart
+```
+
+Merging Git changes or running Flux reconciliation does not apply the Colima
+profile. After restarting, check the **effective** kubelet configuration for the
+default profile/node, rather than only the drop-in file:
+
+```sh
+kubectl --context colima get --raw /api/v1/nodes/colima/proxy/configz \
+  | ruby -rjson -e '
+      keys = %w[imageMaximumGCAge imageGCHighThresholdPercent imageGCLowThresholdPercent]
+      puts JSON.parse(STDIN.read).fetch("kubeletconfig").slice(*keys).to_json
+    '
+```
+
+Expect `24h0m0s`, `85`, and `80`. Later drop-ins or CLI overrides can change the
+effective values. Confirm node/workload health and compare local image usage
+before/after a GC window; the test below does not exercise live garbage collection.
+
+To disable age-based cleanup, change `imageMaximumGCAge` to `0s` in
+`config/colima/values.yaml` and repeat the maintenance-window restart. Disk-based
+GC remains enabled. Simply removing the provisioning block does not remove the
+already-written drop-in from the VM; deleted images must be pulled again.
+
+Validate provisioning locally without starting a VM or deleting images:
+
+```sh
+ruby tests/colima_gc_test.rb
+```
+
+See [Kubernetes image garbage collection](https://kubernetes.io/docs/concepts/architecture/garbage-collection/#containers-images)
+and [K3s kubelet configuration](https://docs.k3s.io/installation/configuration#kubelet-configuration-files).
+
 ## Cloudflare Tunnel chart
 
 `charts/cloudflare-kube-tunnel` is a local wrapper around the upstream Cloudflare Tunnel chart. It expects the tunnel credential Secret to be created outside the chart and routes application Ingresses through the existing local ingress controller.

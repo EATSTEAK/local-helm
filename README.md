@@ -72,8 +72,10 @@ its other kubelet defaults.
 - No pruning command is added to `just flux-reconcile`: reconciling manifests
   does not guarantee every application's rollout has finished.
 
-Apply only during an approved maintenance window (this restarts the local
-cluster):
+Apply only during an approved maintenance window. This restarts the local
+cluster and activates all profile retention policies, including log and build
+cache cleanup. Follow the [activation checklist](config/colima/README.md#approved-activation-checklist)
+first:
 
 ```sh
 just colima-restart
@@ -108,6 +110,15 @@ ruby tests/colima_gc_test.rb
 
 See [Kubernetes image garbage collection](https://kubernetes.io/docs/concepts/architecture/garbage-collection/#containers-images)
 and [K3s kubelet configuration](https://docs.k3s.io/installation/configuration#kubelet-configuration-files).
+
+### Log retention and build cache
+
+The profile also configures Docker `json-file` rotation (`5m`, 3 files),
+journald retention (1GiB, 1GiB keep-free, 7 days), and a 5GB native BuildKit GC
+storage target. Existing containers need recreation to inherit logging defaults.
+See [Colima disk retention](config/colima/README.md) for scope, offline tests,
+approved activation, live verification and rollback. No volume or app-data
+cleanup is automated.
 
 ## Cloudflare Tunnel chart
 

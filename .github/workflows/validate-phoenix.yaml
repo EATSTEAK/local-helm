@@ -34,7 +34,7 @@ jobs:
       - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1
         with:
           ruby-version: "3.3"
-      - name: Verify Colima image GC provisioning without a VM
+      - name: Verify Colima disk retention provisioning without a VM
         run: ruby tests/colima_gc_test.rb
       - name: Validate charts, GitOps overlays and HTTP-only post-rendering
         run: bash scripts/validate-phoenix.sh

@@ -25,7 +25,16 @@ network:
   dnsHosts: {}
   hostAddresses: false
 
-docker: {}
+docker:
+  log-driver: json-file
+  # Rotate below kubelet's 10Mi threshold; cri-dockerd cannot reopen logs.
+  log-opts:
+    max-size: "5m"
+    max-file: "3"
+  builder:
+    gc:
+      enabled: true
+      defaultKeepStorage: "5GB"
 vmType: vz
 portForwarder: ssh
 rosetta: false
@@ -52,6 +61,24 @@ provision:
       EOF
       chmod 0644 "$tmp"
       mv -f "$tmp" "$config_dir/10-image-gc.conf"
+  - mode: system
+    script: |
+      #!/bin/sh
+      set -eu
+      config_dir="/etc/systemd/journald.conf.d"
+      mkdir -p "$config_dir"
+      tmp="$(mktemp "$config_dir/.retention.XXXXXX")"
+      trap 'rm -f "$tmp"' EXIT
+      cat > "$tmp" <<'EOF'
+      [Journal]
+      SystemMaxUse=1G
+      SystemKeepFree=1G
+      MaxRetentionSec=7day
+      EOF
+      chmod 0644 "$tmp"
+      mv -f "$tmp" "$config_dir/60-local-helm-retention.conf"
+      # journald is already running when Lima system provisioning executes.
+      systemctl restart systemd-journald.service
 
 sshConfig: true
 sshPort: 0

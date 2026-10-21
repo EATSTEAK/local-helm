@@ -154,7 +154,11 @@ class PhoenixConfigurationTest < Minitest::Test
     assert_equal({"matchLabels" => {"app" => "phoenix"}}, policy.dig("spec", "podSelector"))
     assert_equal [6006], policy.dig("spec", "ingress").flat_map { |r| r["ports"].map { |p| p["port"] } }
     assert_equal "ingress-nginx", policy.dig("spec", "ingress", 0, "from", 0, "namespaceSelector", "matchLabels", "kubernetes.io/metadata.name")
-    assert_equal [53, 53, 5432], policy.dig("spec", "egress").flat_map { |r| r["ports"].map { |p| p["port"] } }.sort
+    assert_equal [53, 53, 5432, 8317], policy.dig("spec", "egress").flat_map { |r| r["ports"].map { |p| p["port"] } }.sort
+    assert_includes policy.dig("spec", "egress"), {
+      "to" => [{"ipBlock" => {"cidr" => "192.168.5.2/32"}}],
+      "ports" => [{"protocol" => "TCP", "port" => 8317}]
+    }
     postgres = resource(self.class.postgres, "NetworkPolicy", "shared-postgres")
     assert_equal "true", postgres.dig("spec", "ingress", 0, "from", 0, "podSelector", "matchLabels", "shared-postgres-client")
     assert_equal [], postgres.dig("spec", "egress")

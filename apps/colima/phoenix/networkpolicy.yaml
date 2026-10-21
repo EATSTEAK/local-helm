@@ -4,7 +4,7 @@ metadata:
   name: phoenix
 spec:
   podSelector:
-    matchLabels: {app: phoenix}
+    matchLabels: { app: phoenix }
   policyTypes: [Ingress, Egress]
   ingress:
     - from:
@@ -16,7 +16,7 @@ spec:
               app.kubernetes.io/name: ingress-nginx
               app.kubernetes.io/component: controller
       ports:
-        - {protocol: TCP, port: 6006}
+        - { protocol: TCP, port: 6006 }
   egress:
     - to:
         - podSelector:
@@ -24,13 +24,18 @@ spec:
               app.kubernetes.io/name: shared-postgres
               app.kubernetes.io/instance: shared-postgres
       ports:
-        - {protocol: TCP, port: 5432}
+        - { protocol: TCP, port: 5432 }
     - to:
         - namespaceSelector:
             matchLabels:
               kubernetes.io/metadata.name: kube-system
           podSelector:
-            matchLabels: {k8s-app: kube-dns}
+            matchLabels: { k8s-app: kube-dns }
       ports:
-        - {protocol: UDP, port: 53}
-        - {protocol: TCP, port: 53}
+        - { protocol: UDP, port: 53 }
+        - { protocol: TCP, port: 53 }
+    - to:
+        - ipBlock:
+            cidr: 192.168.5.2/32 # host.docker.internal in Colima
+      ports:
+        - { protocol: TCP, port: 8317 }

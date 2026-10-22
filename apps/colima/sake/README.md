@@ -13,7 +13,7 @@ Colima GitOps overlay for Sake in the `sake` namespace. Dependencies, API, worke
 - `helmrelease-deps.yaml` reconciles `HelmRelease/sake-deps` from the local chart `./charts/sake-deps`.
 - `helmrelease-api.yaml` reconciles `HelmRelease/sake-api` from `./charts/sake-api` and depends on `sake-deps`.
 - `helmrelease-worker.yaml` reconciles `HelmRelease/sake-worker` from `./charts/sake-worker` and depends on both `sake-deps` and `sake-api`.
-- `helmrelease-studio.yaml` reconciles `HelmRelease/sake-studio` from `./charts/sake-studio` and depends only on `sake-deps`.
+- `helmrelease-studio.yaml` reconciles `HelmRelease/sake-studio` from `./charts/sake-studio` and depends on both `sake-deps` and `sake-api`, so Studio waits for the API migration hooks to succeed.
 
 ## Runtime configuration
 

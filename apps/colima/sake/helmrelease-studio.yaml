@@ -9,6 +9,7 @@ spec:
   targetNamespace: sake
   dependsOn:
     - name: sake-deps
+    - name: sake-api
   chart:
     spec:
       chart: ./charts/sake-studio

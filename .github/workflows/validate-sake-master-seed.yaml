@@ -1,0 +1,30 @@
+name: Validate Sake master seed
+
+on:
+  pull_request:
+    paths:
+      - apps/colima/sake/api-values.yaml
+      - charts/sake-api/**
+      - tests/sake_master_seed_test.rb
+      - .github/workflows/validate-sake-master-seed.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: azure/setup-helm@b9e51907a09c216f16ebe8536097933489208112 # v4.3.0
+        with:
+          version: v3.17.3
+      - uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1
+        with:
+          ruby-version: "3.3"
+      - name: Validate master seed hook
+        run: |
+          helm lint --strict charts/sake-api -f apps/colima/sake/api-values.yaml
+          ruby tests/sake_master_seed_test.rb

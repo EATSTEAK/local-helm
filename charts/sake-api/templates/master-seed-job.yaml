@@ -40,10 +40,10 @@ spec:
             {{- end }}
           command:
             - /bin/sh
-            - -c
+            - -ec
             - |
               test -n "$DATABASE_URL"
-              test -n "$SAKE_ADMIN_EMAIL"
-              test -n "$SAKE_ADMIN_PASSWORD"
+              test -n "$ADMIN_EMAIL"
+              test -n "$ADMIN_PASSWORD"
               node server/api/dist/auth/seed-master-account.js
 {{- end }}

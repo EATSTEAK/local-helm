@@ -75,7 +75,7 @@ kubectl -n sake create secret generic sake-studio-basic-auth \
 rm /tmp/sake-studio-auth
 ```
 
-Create or refresh `sake-runtime-secrets` before deploying dependencies, API, worker, and Studio. `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` seed the master login account; the remaining keys back local LLM, embedding, Tavily, LangSmith, and Crawl4AI integrations. Studio reads provider credentials from this Secret so its registered research tools match the worker.
+Create or refresh `sake-runtime-secrets` before deploying dependencies, API, worker, and Studio. `ADMIN_EMAIL` and `ADMIN_PASSWORD` seed the master login account; the remaining keys back local LLM, embedding, Tavily, LangSmith, and Crawl4AI integrations. Studio reads provider credentials from this Secret so its registered research tools match the worker.
 
 Crawl4AI 0.9.5 intentionally binds only to loopback when no API token is
 configured, so a Kubernetes `ClusterIP` alone cannot bypass authentication.
@@ -87,14 +87,20 @@ HTTP/HTTPS plus cluster DNS; this requires the cluster CNI to enforce
 
 ```sh
 kubectl -n sake create secret generic sake-runtime-secrets \
-  --from-literal=SAKE_ADMIN_EMAIL='<master-admin-email>' \
-  --from-literal=SAKE_ADMIN_PASSWORD='<master-admin-password>' \
+  --from-literal=ADMIN_EMAIL='<master-admin-email>' \
+  --from-literal=ADMIN_PASSWORD='<master-admin-password>' \
   --from-literal=LLM_API_KEY='<local-llm-api-key-or-placeholder>' \
   --from-literal=EMBEDDING_API_KEY='<gemini-api-key>' \
   --from-literal=TAVILY_API_KEY='<tavily-api-key>' \
   --from-literal=LANGSMITH_API_KEY='<langsmith-api-key>' \
   --from-literal=CRAWL4AI_API_TOKEN="$(openssl rand -hex 32)" \
   --dry-run=client -o yaml | kubectl apply -f -
+```
+
+For an existing install, copy the current `SAKE_ADMIN_EMAIL` and `SAKE_ADMIN_PASSWORD` values into `ADMIN_EMAIL` and `ADMIN_PASSWORD` without rotating credentials. Add only the canonical keys with a merge patch, retain the legacy keys during the transition, and preserve every other Secret field. After the Secret and chart update are available, reset/reconcile a stalled API release:
+
+```sh
+flux reconcile helmrelease sake-api -n sake --reset
 ```
 
 If only Secret data changes, restart running pods so `envFrom` picks up the new values:

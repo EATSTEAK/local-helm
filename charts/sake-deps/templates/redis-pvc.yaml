@@ -1,0 +1,23 @@
+{{- if and .Values.redis.enabled .Values.redis.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.redis.persistence.claimName }}
+  namespace: {{ include "sake-deps.namespace" . }}
+  labels:
+    {{- include "sake-deps.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "sake-deps.redisName" . }}
+    app.kubernetes.io/component: redis
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    {{- toYaml .Values.redis.persistence.accessModes | nindent 4 }}
+  {{- with .Values.redis.persistence.storageClassName }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.redis.persistence.size | quote }}
+  volumeMode: {{ .Values.redis.persistence.volumeMode }}
+{{- end }}

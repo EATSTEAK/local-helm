@@ -10,6 +10,9 @@ metadata:
     app.kubernetes.io/component: redis
 spec:
   replicas: 1
+  # A single Redis writer must own the data directory during upgrades.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: {{ include "sake-deps.redisName" . }}
@@ -26,6 +29,16 @@ spec:
         - name: redis
           image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
           imagePullPolicy: {{ .Values.redis.image.pullPolicy }}
+          {{- if .Values.redis.persistence.enabled }}
+          args:
+            - --appendonly
+            - "yes"
+            - --appendfsync
+            - everysec
+          volumeMounts:
+            - name: data
+              mountPath: /data
+          {{- end }}
           ports:
             - name: redis
               containerPort: {{ .Values.redis.service.port }}
@@ -46,6 +59,12 @@ spec:
             periodSeconds: 20
           resources:
             {{- toYaml .Values.redis.resources | nindent 12 }}
+      {{- if .Values.redis.persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.redis.persistence.claimName }}
+      {{- end }}
 ---
 apiVersion: v1
 kind: Service

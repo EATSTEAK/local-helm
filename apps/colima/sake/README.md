@@ -35,7 +35,7 @@ The API chart runs Prisma migration and master account seed jobs as Helm hooks. 
 `sake-deps` deploys local development dependencies:
 
 - PostgreSQL with pgvector: `pgvector/pgvector:pg16`, PVC `sake-postgres-data`, `8Gi`
-- Redis: `redis:7-alpine`
+- Redis: `redis:7-alpine`, PVC `sake-redis-data`, `2Gi`, AOF with `appendfsync everysec`
 - Silo (MinIO-compatible):
   `pgsty/silo:RELEASE.2026-09-16T00-00-00Z`, bucket `sake-dev`, PVC
   `sake-minio-data`, `10Gi`
@@ -118,6 +118,38 @@ app: sake
 tag: main-<sha>
 targets: [{"file":"apps/colima/sake/api-values.yaml","path":"image.tag"},{"file":"apps/colima/sake/worker-values.yaml","path":"image.tag"},{"file":"apps/colima/sake/studio-values.yaml","path":"image.tag"}]
 ```
+
+## Redis persistence cutover
+
+An existing ephemeral Redis must be migrated **before** deploying the persistence
+change. Starting Redis with `appendonly yes` against only an RDB backup can start
+an empty dataset; prepare AOF files first.
+
+1. Suspend the four Sake Helm releases. Record their state, application replica
+   counts, Redis deployment, and the queues that are not already paused.
+2. Pause queue intake, wait for active jobs to finish, then scale API, worker and
+   Studio to zero. Do not terminate active analysis to force the migration.
+3. Run Redis `SAVE` and keep a protected copy of `dump.rdb` outside the pod.
+   Record key/value fingerprints after writers stop.
+4. Create `sake-redis-data` with the chart's Helm ownership metadata and mount it
+   in a temporary pod using the same Redis image. Copy the RDB into `/data` and
+   start isolated Redis with AOF disabled. Enable AOF with `CONFIG SET appendonly
+   yes`; wait for the rewrite to finish successfully. Check the data against the
+   source, shut down the isolated server cleanly, and remove the temporary pod.
+5. Deploy the reviewed chart and resume the dependency release. Confirm the new
+   Redis mounts the PVC, AOF is enabled, and key/value fingerprints match before
+   resuming the recorded queues and restoring application replica counts.
+6. Verify application readiness, then resume the other Helm releases. Keep the
+   backup until recovery is confirmed. The PVC uses Helm's `keep` policy.
+
+Before application writes resume, a failed cutover can return to the saved Redis
+spec using the protected RDB with AOF disabled. Keep the releases suspended while
+recovering. After writes resume, take a fresh backup from the PVC before any
+rollback; the old RDB no longer contains the latest queue state. Do not delete the
+PVC or enable ephemeral mode as a rollback shortcut.
+
+AOF `everysec` can lose roughly one second of writes on a host failure. The
+`local-path` PVC survives pod replacement, not loss of the Colima disk.
 
 ## Operations
 

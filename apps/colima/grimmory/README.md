@@ -15,7 +15,7 @@ kubectl -n default get pods,pvc,ingress
 
 The optional `translation-sidecar` watches `/books/translations-original` for stable EPUB files, translates them with `yihong0618/bilingual_book_maker`, and atomically publishes Korean EPUB files with the same relative path under `/books/epub_kr`. Job state and resumable checkpoints live in `/books/.translation-sidecar` on the books PVC.
 
-The sidecar defaults to the OpenAI-compatible endpoint at `http://host.docker.internal:8317/v1` and model `gpt-5.6-luna`. Every translation and polling option can be overridden under `translationSidecar.config` in [`values.yaml`](values.yaml). The API key is intentionally kept out of Git. The Colima overlay pulls the private, versioned image from GHCR with the existing `default/ghcr-auth` pull Secret.
+The sidecar defaults to the OpenAI-compatible endpoint at `http://host.docker.internal:8317/v1` and model `gpt-6-luna`. Every translation and polling option can be overridden under `translationSidecar.config` in [`values.yaml`](values.yaml). The API key is intentionally kept out of Git. The Colima overlay pulls the private, versioned image from GHCR with the existing `default/ghcr-auth` pull Secret.
 
 To reproduce the deployment on a fresh Colima VM:
 

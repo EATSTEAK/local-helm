@@ -1,5 +1,8 @@
 namespace: default
-image: {repository: ghcr.io/grimmory-tools/grimmory, tag: v3.2.4, pullPolicy: IfNotPresent}
+image:
+  repository: ghcr.io/grimmory-tools/grimmory
+  tag: v3.2.4
+  pullPolicy: IfNotPresent
 timezone: UTC
 database:
   host: grimmory-mariadb
@@ -8,7 +11,10 @@ database:
   secretName: grimmory-db
   passwordKey: database-password
   rootPasswordKey: root-password
-  image: {repository: lscr.io/linuxserver/mariadb, tag: 11.4.8, pullPolicy: IfNotPresent}
+  image:
+    repository: lscr.io/linuxserver/mariadb
+    tag: 11.4.8
+    pullPolicy: IfNotPresent
 service: {port: 6060}
 ingress: {enabled: false, className: nginx, host: "", annotations: {}}
 resources: {app: {}, mariadb: {}}
@@ -33,7 +39,7 @@ translationSidecar:
     outputDir: /books/epub_kr
     stateDir: /books/.translation-sidecar
     llmBaseUrl: http://host.docker.internal:8317/v1
-    llmModel: gpt-5.6-luna
+    llmModel: gpt-6-luna
     targetLanguage: ko
     singleTranslate: true
     planClassify: most

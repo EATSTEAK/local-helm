@@ -28,7 +28,13 @@ Colima GitOps overlay for Sake in the `sake` namespace. Dependencies, API, worke
 - Worker embedding model: `gemini-embedding-2`
 - Embedding dimensions: `1536`
 
-The API chart runs Prisma migration and master account seed jobs as Helm hooks. The worker and Studio are configured for Tavily-backed research search and Crawl4AI crawling; the worker also enables LangSmith tracing.
+The API chart runs Prisma migration and master account seed jobs as Helm hooks.
+The worker and Studio use Tavily-backed research search and Exa content extraction
+when `EXA_API_KEY` is present in `sake-runtime-secrets`; the worker also enables
+LangSmith tracing. Both Deployment templates explicitly set `CRAWL4AI_API_TOKEN`
+to an empty string, overriding `envFrom` to exclude Crawl4AI from their provider
+catalogs. Keep `RESEARCH_CRAWL_ENABLED=true` so Exa content extraction remains
+available.
 
 ## Dependencies
 
@@ -79,10 +85,11 @@ Create or refresh `sake-runtime-secrets` before deploying dependencies, API, wor
 
 Crawl4AI 0.9.5 intentionally binds only to loopback when no API token is
 configured, so a Kubernetes `ClusterIP` alone cannot bypass authentication.
-The same random
-token must be mounted into Crawl4AI, the Sake worker, and Studio. The dependency
-chart limits Crawl4AI ingress to worker and Studio pods and egress to public
-HTTP/HTTPS plus cluster DNS; this requires the cluster CNI to enforce
+Keep the server token in `sake-runtime-secrets` even while the worker and Studio
+override their token with an empty string. To re-enable the Crawl4AI provider,
+remove both Deployment overrides so all three services use the same token.
+The dependency chart limits Crawl4AI ingress to worker and Studio pods and egress
+to public HTTP/HTTPS plus cluster DNS; this requires the cluster CNI to enforce
 `NetworkPolicy`:
 
 ```sh

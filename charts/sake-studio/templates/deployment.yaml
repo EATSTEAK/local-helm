@@ -32,6 +32,10 @@ spec:
             - name: http
               containerPort: {{ .Values.container.port }}
               protocol: TCP
+          # Disable Crawl4AI without changing the shared runtime Secret.
+          env:
+            - name: CRAWL4AI_API_TOKEN
+              value: ""
           envFrom:
             {{- if .Values.config }}
             - configMapRef:

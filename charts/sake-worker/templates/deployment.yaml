@@ -31,8 +31,10 @@ spec:
           {{ end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          # Disable Crawl4AI without changing the shared runtime Secret.
+          # Disable Tavily and Crawl4AI without changing the shared runtime Secret.
           env:
+            - name: TAVILY_API_KEY
+              value: ""
             - name: CRAWL4AI_API_TOKEN
               value: ""
           envFrom:

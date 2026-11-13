@@ -31,6 +31,10 @@ spec:
           {{ end }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
+          # Disable Tavily without changing the shared runtime Secret.
+          env:
+            - name: TAVILY_API_KEY
+              value: ""
           envFrom:
             {{- if .Values.config }}
             - configMapRef:
